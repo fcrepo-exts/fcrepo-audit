@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import javax.jcr.observation.Event;
+import org.fcrepo.kernel.observer.FedoraEvent;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,8 +43,6 @@ import com.google.common.eventbus.EventBus;
  */
 public class LogbackAuditorTest {
 
-    private final int jcrEventType = 1;
-
     private final String jcrEventUserID = "jdoe";
 
     private final String jcrEventPath = "/foo/bar";
@@ -64,8 +62,7 @@ public class LogbackAuditorTest {
 
         when(mockAppender.getName()).thenReturn("MockAppender");
 
-        final Event mockEvent = mock(Event.class);
-        when(mockEvent.getType()).thenReturn(jcrEventType);
+        final FedoraEvent mockEvent = mock(FedoraEvent.class);
         when(mockEvent.getUserID()).thenReturn(jcrEventUserID);
         when(mockEvent.getPath()).thenReturn(jcrEventPath);
 
@@ -82,7 +79,7 @@ public class LogbackAuditorTest {
                     @Override
                     public boolean matches(final Object argument) {
                         return ((LoggingEvent) argument).getFormattedMessage()
-                                .contains("jdoe node added /foo/bar");
+                                .contains("jdoe /foo/bar");
                     }
                 }));
     }
