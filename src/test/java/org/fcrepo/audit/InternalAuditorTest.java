@@ -67,7 +67,8 @@ public class InternalAuditorTest {
 
     private static final String userID = "bypassAdmin";
 
-    private static final String userAgent = "{\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
+    private static final String userAgent = "{\"baseURL\":\"http://localhost:8080/rest\"," +
+            "\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36\"}";
 
     private static final String pid = "0f/69/a3/fe/0f69a3fe-2526-4d2a-a842-cf475a3b9858";
@@ -149,7 +150,8 @@ public class InternalAuditorTest {
         verify(mockNode).setProperty("rdf:type", "premis:Event");
         verify(mockNode).setProperty("rdf:type", PROV + "InstantaneousEvent");
         verify(mockNode).setProperty("premis:hasEventDateTime", "2015-04-10T14:30:36Z");
-        verify(mockNode).setProperty("premis:hasEventRelatedObject", identifier);
+        verify(mockNode).setProperty("premis:hasEventRelatedObject",
+                "http://localhost:8080/rest/non/audit/container/path");
         verify(mockNode).setProperty("premis:hasEventRelatedAgent", userID);
         verify(mockNode).setProperty("premis:hasEventRelatedAgent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36");
@@ -219,11 +221,10 @@ public class InternalAuditorTest {
     private static FedoraEvent setupMockEvent(final Set<Integer> eventTypes,
                                            final Set<String> eventProperties) throws RepositoryException {
         final FedoraEvent mockFedoraEvent = mock(FedoraEvent.class);
-        when(mockFedoraEvent.getIdentifier()).thenReturn(identifier);
         when(mockFedoraEvent.getDate()).thenReturn(timestamp);
         when(mockFedoraEvent.getUserID()).thenReturn(userID);
         when(mockFedoraEvent.getUserData()).thenReturn(userAgent);
-        when(mockFedoraEvent.getPath()).thenReturn("/non/audit/container");
+        when(mockFedoraEvent.getPath()).thenReturn("/non/audit/container/path");
         when(mockFedoraEvent.getTypes()).thenReturn(eventTypes);
         when(mockFedoraEvent.getProperties()).thenReturn(eventProperties);
         return mockFedoraEvent;

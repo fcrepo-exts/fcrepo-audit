@@ -178,12 +178,12 @@ public class InternalAuditor implements Auditor {
      */
     public void createAuditNode(final FedoraEvent event) throws RepositoryException, IOException {
         final String uuid = pidMinter.mintPid();
-        final String baseURL = event.getIdentifier();
-        final String identifier = event.getIdentifier();
         final String userData = event.getUserData();
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode json = mapper.readTree(userData);
         final String userAgent = json.get("userAgent").asText();
+        final String baseURL = json.get("baseURL").asText();
+        final String path = event.getPath();
         final Long timestamp =  event.getDate();
         final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -200,7 +200,7 @@ public class InternalAuditor implements Auditor {
         auditNode.setProperty(RDF_TYPE, PREMIS_EVENT);
         auditNode.setProperty(RDF_TYPE, PROV_EVENT);
         auditNode.setProperty(PREMIS_TIME, eventDate);
-        auditNode.setProperty(PREMIS_OBJ, identifier);
+        auditNode.setProperty(PREMIS_OBJ, baseURL + path);
         auditNode.setProperty(PREMIS_AGENT, userID);
         auditNode.setProperty(PREMIS_AGENT, userAgent);
 
