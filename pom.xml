@@ -30,6 +30,7 @@
     <slf4j.version>1.7.7</slf4j.version>
     <!-- plugin versions -->
     <checkstyle.plugin.version>2.14</checkstyle.plugin.version>
+    <spring.version>4.1.1.RELEASE</spring.version>
     <!-- default properties that can be altered on the command line -->
     <fcrepo.test.context.path />
   </properties>
@@ -84,6 +85,11 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>${spring.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
