@@ -15,6 +15,8 @@
  */
 package org.fcrepo.audit;
 
+import java.io.IOException;
+
 import javax.jcr.RepositoryException;
 
 import org.fcrepo.kernel.observer.FedoraEvent;
@@ -34,5 +36,5 @@ public interface Auditor {
      * @throws RepositoryException
      */
     @Subscribe
-    void recordEvent(final FedoraEvent e) throws RepositoryException;
+    void recordEvent(final FedoraEvent e) throws RepositoryException, IOException;
 }

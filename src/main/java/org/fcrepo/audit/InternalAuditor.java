@@ -22,6 +22,7 @@ import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,18 +41,17 @@ import org.fcrepo.kernel.services.ContainerService;
 import org.fcrepo.kernel.utils.EventType;
 import org.fcrepo.mint.UUIDPathMinter;
 
-import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 /**
  * @author mohideen
@@ -110,7 +110,7 @@ public class InternalAuditor implements Auditor {
      * @throws RepositoryException
      */
     @Subscribe
-    public void recordEvent(final FedoraEvent event) throws RepositoryException {
+    public void recordEvent(final FedoraEvent event) throws RepositoryException, IOException {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
         boolean isParentNodeLastModifiedEvent = false;
         final String eventType = getEventURIs(event.getTypes());
@@ -176,13 +176,14 @@ public class InternalAuditor implements Auditor {
      * @param event
      * @throws RepositoryException
      */
-    public void createAuditNode(final FedoraEvent event) throws RepositoryException {
+    public void createAuditNode(final FedoraEvent event) throws RepositoryException, IOException {
         final String uuid = pidMinter.mintPid();
-        final JcrTools jcrTools = new JcrTools();
+        final String baseURL = event.getIdentifier();
         final String identifier = event.getIdentifier();
         final String userData = event.getUserData();
-        final JsonObject json = new JsonParser().parse(userData).getAsJsonObject();
-        final String userAgent = json.get("userAgent").getAsString();
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(userData);
+        final String userAgent = json.get("userAgent").asText();
         final Long timestamp =  event.getDate();
         final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -192,7 +193,7 @@ public class InternalAuditor implements Auditor {
         final String properties = Joiner.on(',').join(event.getProperties());
         final Node auditNode = containerService.findOrCreate(session, "/audit/" + uuid).getNode();
 
-        LOGGER.info("Audit node {} created for event.", uuid);
+        LOGGER.debug("Audit node {} created for event.", uuid);
 
         auditNode.addMixin("fedora:Resource");
         auditNode.setProperty(RDF_TYPE, INTERNAL_EVENT);

@@ -67,7 +67,7 @@ public class InternalAuditorTest {
 
     private static final String userID = "bypassAdmin";
 
-    private static final String userAgent = "{userAgent:\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
+    private static final String userAgent = "{\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36\"}";
 
     private static final String pid = "0f/69/a3/fe/0f69a3fe-2526-4d2a-a842-cf475a3b9858";
