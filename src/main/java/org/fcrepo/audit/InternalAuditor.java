@@ -33,6 +33,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.fcrepo.kernel.identifiers.PidMinter;
@@ -184,6 +185,7 @@ public class InternalAuditor implements Auditor {
         final String userAgent = json.get("userAgent").asText();
         final String baseURL = json.get("baseURL").asText();
         final String path = event.getPath();
+        final String uri = baseURL + (baseURL.endsWith("/") ? path.substring(1) : path);
         final Long timestamp =  event.getDate();
         final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -197,15 +199,12 @@ public class InternalAuditor implements Auditor {
         LOGGER.debug("Audit node {} created for event.", uuid);
 
         auditNode.addMixin("fedora:Resource");
-        auditNode.setProperty(RDF_TYPE, INTERNAL_EVENT);
-        auditNode.setProperty(RDF_TYPE, PREMIS_EVENT);
-        auditNode.setProperty(RDF_TYPE, PROV_EVENT);
-        auditNode.setProperty(PREMIS_TIME, eventDate);
-        auditNode.setProperty(PREMIS_OBJ, baseURL + path);
-        auditNode.setProperty(PREMIS_AGENT, userID);
-        auditNode.setProperty(PREMIS_AGENT, userAgent);
+        auditNode.setProperty(RDF_TYPE, new String[]{INTERNAL_EVENT, PREMIS_EVENT, PROV_EVENT});
+        auditNode.setProperty(PREMIS_TIME, eventDate, PropertyType.DATE);
+        auditNode.setProperty(PREMIS_OBJ, uri, PropertyType.URI);
+        auditNode.setProperty(PREMIS_AGENT, new String[]{userID,userAgent});
         if (auditEventType != null) {
-            auditNode.setProperty(PREMIS_TYPE, auditEventType);
+            auditNode.setProperty(PREMIS_TYPE, auditEventType, PropertyType.URI);
         }
         session.save();
     }
