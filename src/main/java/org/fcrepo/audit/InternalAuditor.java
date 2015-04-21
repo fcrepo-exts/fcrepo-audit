@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -94,6 +95,10 @@ public class InternalAuditor implements Auditor {
             if (!AUDIT_CONTAINER_LOCATION.startsWith("/")) {
                 AUDIT_CONTAINER_LOCATION = "/" + AUDIT_CONTAINER_LOCATION;
             }
+            if (AUDIT_CONTAINER_LOCATION.endsWith("/")) {
+                AUDIT_CONTAINER_LOCATION = AUDIT_CONTAINER_LOCATION.substring(0,
+                        AUDIT_CONTAINER_LOCATION.length() - 2);
+            }
             session = repository.login();
             containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION);
             session.save();
@@ -115,17 +120,18 @@ public class InternalAuditor implements Auditor {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
         boolean isParentNodeLastModifiedEvent = false;
         final String eventType = getEventURIs(event.getTypes());
-        final String properties = Joiner.on(',').join(event.getProperties());
+        final Set<String> properties = event.getProperties();
         if (eventType.contains(PROPERTY_CHANGED)) {
-            if (properties != null) {
-                if (properties.equals(LAST_MODIFIED)
-                        || properties.equals(LAST_MODIFIED_BY)
-                        || properties.equals(LAST_MODIFIED + "," + LAST_MODIFIED_BY)
-                        || properties.equals(LAST_MODIFIED_BY + "," + LAST_MODIFIED)) {
-
-                /* adding/removing a file updates the lastModified property of the parent container,
-                so ignore updates when only lastModified is changed */
-                    isParentNodeLastModifiedEvent = true;
+            isParentNodeLastModifiedEvent = true;
+            final Iterator<String> propertiesIter = properties.iterator();
+            String property;
+            while (properties.iterator().hasNext()) {
+                property = propertiesIter.next();
+                if (!property.equals(LAST_MODIFIED) && !property.equals(LAST_MODIFIED_BY)) {
+                    /* adding/removing a file updates the lastModified property of the parent container,
+                    so ignore updates when only lastModified is changed */
+                    isParentNodeLastModifiedEvent = false;
+                    break;
                 }
             }
         }
@@ -194,7 +200,7 @@ public class InternalAuditor implements Auditor {
         final String eventType = getEventURIs(event.getTypes());
         final String properties = Joiner.on(',').join(event.getProperties());
         final String auditEventType = getAuditEventType(eventType, properties);
-        final Node auditNode = containerService.findOrCreate(session, "/audit/" + uuid).getNode();
+        final Node auditNode = containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION + "/" + uuid).getNode();
 
         LOGGER.debug("Audit node {} created for event.", uuid);
 
