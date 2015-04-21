@@ -191,6 +191,7 @@ public class InternalAuditor implements Auditor {
         final String userID = event.getUserID();
         final String eventType = getEventURIs(event.getTypes());
         final String properties = Joiner.on(',').join(event.getProperties());
+        final String auditEventType = getAuditEventType(eventType, properties);
         final Node auditNode = containerService.findOrCreate(session, "/audit/" + uuid).getNode();
 
         LOGGER.debug("Audit node {} created for event.", uuid);
@@ -203,33 +204,18 @@ public class InternalAuditor implements Auditor {
         auditNode.setProperty(PREMIS_OBJ, baseURL + path);
         auditNode.setProperty(PREMIS_AGENT, userID);
         auditNode.setProperty(PREMIS_AGENT, userAgent);
-
-        // mapping event type/properties to audit event type
-        if (eventType.contains(NODE_ADDED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                auditNode.setProperty(PREMIS_TYPE, CONTENT_ADD);
-            } else {
-                auditNode.setProperty(PREMIS_TYPE, OBJECT_ADD);
-            }
-        } else if (eventType.contains(NODE_REMOVED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                auditNode.setProperty(PREMIS_TYPE, CONTENT_REM);
-            } else {
-                auditNode.setProperty(PREMIS_TYPE, OBJECT_REM);
-            }
-        } else if (eventType.contains(PROPERTY_CHANGED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                auditNode.setProperty(PREMIS_TYPE, CONTENT_MOD);
-            } else {
-                auditNode.setProperty(PREMIS_TYPE, METADATA_MOD);
-            }
+        if (auditEventType != null) {
+            auditNode.setProperty(PREMIS_TYPE, auditEventType);
         }
-
         session.save();
-
     }
 
-
+    /**
+     * Returns the comma event types string for the integer event types.
+     *
+     * @param types
+     * @return
+     */
     private static String getEventURIs(final Set<Integer> types) {
         final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<Integer, String>() {
 
@@ -240,5 +226,36 @@ public class InternalAuditor implements Auditor {
         }));
         LOGGER.debug("Constructed event type URIs: {}", uris);
         return uris;
+    }
+
+    /**
+     * Returns the Audit event type based on fedora event type and properties.
+     *
+     * @param eventType
+     * @param properties
+     * @return
+     */
+    public String getAuditEventType(final String eventType, final String properties) {
+        // mapping event type/properties to audit event type
+        if (eventType.contains(NODE_ADDED)) {
+            if (properties != null && properties.contains(HAS_CONTENT)) {
+                return CONTENT_ADD;
+            } else {
+                return OBJECT_ADD;
+            }
+        } else if (eventType.contains(NODE_REMOVED)) {
+            if (properties != null && properties.contains(HAS_CONTENT)) {
+                return CONTENT_REM;
+            } else {
+                return OBJECT_REM;
+            }
+        } else if (eventType.contains(PROPERTY_CHANGED)) {
+            if (properties != null && properties.contains(HAS_CONTENT)) {
+                return CONTENT_MOD;
+            } else {
+                return METADATA_MOD;
+            }
+        }
+        return null;
     }
 }
