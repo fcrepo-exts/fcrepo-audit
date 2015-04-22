@@ -240,7 +240,7 @@ public class InternalAuditor implements Auditor {
      * @param properties
      * @return
      */
-    public String getAuditEventType(final String eventType, final String properties) {
+    public static String getAuditEventType(final String eventType, final String properties) {
         // mapping event type/properties to audit event type
         if (eventType.contains(NODE_ADDED)) {
             if (properties != null && properties.contains(HAS_CONTENT)) {
