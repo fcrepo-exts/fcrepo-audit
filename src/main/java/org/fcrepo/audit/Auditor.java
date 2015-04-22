@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 DuraSpace, Inc.
+ * Copyright 2015 DuraSpace, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,11 @@
  */
 package org.fcrepo.audit;
 
+import java.io.IOException;
+
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
+
+import org.fcrepo.kernel.observer.FedoraEvent;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -29,9 +32,9 @@ public interface Auditor {
 
     /**
      * @param e
-     *        The {@link Event} to record.
+     *        The {@link FedoraEvent} to record.
      * @throws RepositoryException
      */
     @Subscribe
-    void recordEvent(final Event e) throws RepositoryException;
+    void recordEvent(final FedoraEvent e) throws RepositoryException, IOException;
 }

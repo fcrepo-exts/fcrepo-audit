@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * This package provides functionality for auditing Fedora events. An <code> Auditor</code> records auditable Fedora
- *  events.
- * Currently the implementation registers itself to Google Guava <a
- * href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/eventbus/EventBus.html">EventBus</a>
- * and uses Logback framework.
- *
- * @author eddies
- */
 package org.fcrepo.audit;
+
+/**
+ * @author mohideen
+ * @date 4/15/15.
+ */
+public class AuditNamespaces {
+    public static final String REPOSITORY = "http://fedora.info/definitions/v4/repository#";
+    public static final String AUDIT = "http://fedora.info/definitions/v4/audit#";
+    public static final String EVENT_TYPE = "http://id.loc.gov/vocabulary/preservation/eventType/";
+    public static final String PROV = "http://www.w3.org/ns/prov#";
+
+    private AuditNamespaces() {
+        // prevent instantiation
+    }
+}

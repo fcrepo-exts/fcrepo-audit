@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 DuraSpace, Inc.
+ * Copyright 2015 DuraSpace, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
 
-import org.fcrepo.kernel.utils.EventType;
+import org.fcrepo.kernel.observer.FedoraEvent;
+
 import org.slf4j.Logger;
 
 import com.google.common.eventbus.EventBus;
@@ -32,6 +32,7 @@ import com.google.common.eventbus.Subscribe;
  * A proof-of-concept Auditor implementation that uses Logback.
  *
  * @author Edwin Shin
+ * @date 2014
  */
 public class LogbackAuditor implements Auditor {
 
@@ -54,7 +55,7 @@ public class LogbackAuditor implements Auditor {
 
     @Override
     @Subscribe
-    public void recordEvent(final Event e) throws RepositoryException {
-        LOGGER.info("{} {} {}", e.getUserID(), EventType.valueOf(e.getType()).getName(), e.getPath());
+    public void recordEvent(final FedoraEvent e) throws RepositoryException {
+        LOGGER.info("{} {}", e.getUserID(), e.getPath());
     }
 }
