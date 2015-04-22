@@ -23,7 +23,9 @@ public class AuditNamespaces {
     public static final String REPOSITORY = "http://fedora.info/definitions/v4/repository#";
     public static final String AUDIT = "http://fedora.info/definitions/v4/audit#";
     public static final String EVENT_TYPE = "http://id.loc.gov/vocabulary/preservation/eventType/";
+    public static final String PREMIS = "http://www.loc.gov/premis/rdf/v1#";
     public static final String PROV = "http://www.w3.org/ns/prov#";
+    public static final String XSD = "http://www.w3.org/2001/XMLSchema#";
 
     private AuditNamespaces() {
         // prevent instantiation
