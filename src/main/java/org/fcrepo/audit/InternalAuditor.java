@@ -46,9 +46,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.jcr.RepositoryException;
-import javax.ws.rs.core.UriBuilder;
 
-import org.fcrepo.http.commons.api.rdf.HttpResourceConverter;
+import org.fcrepo.kernel.impl.rdf.impl.DefaultIdentifierTranslator;
 import org.fcrepo.kernel.exception.RepositoryRuntimeException;
 import org.fcrepo.kernel.identifiers.PidMinter;
 import org.fcrepo.kernel.models.FedoraResource;
@@ -246,9 +245,9 @@ public class InternalAuditor implements Auditor {
 
             LOGGER.debug("Audit node {} created for event.", uuid);
 
-            //auditResource.addMixin("fedora:Resource");
             final Model m = createDefaultModel();
-            final Resource s = createResource(baseURL + AUDIT_CONTAINER_LOCATION + "/" + uuid);
+            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + uuid;
+            final Resource s = createResource(auditResourceURI);
             m.add(createStatement(s, RDF_TYPE, createResource(INTERNAL_EVENT)));
             m.add(createStatement(s, RDF_TYPE, createResource(PREMIS_EVENT)));
             m.add(createStatement(s, RDF_TYPE, createResource(PROV_EVENT)));
@@ -259,8 +258,8 @@ public class InternalAuditor implements Auditor {
                 m.add(createStatement(s, PREMIS_TYPE, createResource(auditEventType)));
             }
 
-            final HttpResourceConverter subjects = new HttpResourceConverter(session, UriBuilder.fromUri(baseURL));
-            auditResource.replaceProperties(subjects, m, new RdfStream(), containerService);
+            auditResource.replaceProperties(new DefaultIdentifierTranslator(session, baseURL + "/"), m,
+                    new RdfStream(), containerService);
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
             try {

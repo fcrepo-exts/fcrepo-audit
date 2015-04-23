@@ -55,7 +55,7 @@
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
-      <artifactId>fcrepo-http-commons</artifactId>
+      <artifactId>fcrepo-kernel-impl</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
