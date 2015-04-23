@@ -17,6 +17,7 @@ package org.fcrepo.audit;
 
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
+import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
@@ -152,7 +153,7 @@ public class InternalAuditor implements Auditor {
 
     // namespaces and properties
     private static final String INTERNAL_EVENT = AUDIT + "InternalEvent";
-    private static final String PREMIS_EVENT = "premis:Event";
+    private static final String PREMIS_EVENT = PREMIS + "Event";
     private static final String PROV_EVENT = PROV + "InstantaneousEvent";
 
     private static final String CONTENT_MOD = AUDIT + "contentModification";
