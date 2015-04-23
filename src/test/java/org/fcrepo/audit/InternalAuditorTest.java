@@ -15,27 +15,34 @@
  */
 package org.fcrepo.audit;
 
+import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
+import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDstring;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
+import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
+import static org.fcrepo.kernel.RdfLexicon.RDF_NAMESPACE;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.Node;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.security.auth.login.LoginException;
@@ -51,6 +58,7 @@ import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 
 import com.google.common.eventbus.EventBus;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * @author mohideen
@@ -68,9 +76,9 @@ public class InternalAuditorTest {
 
     private static final String userID = "bypassAdmin";
 
-    private static final String userAgent = "{\"baseURL\":\"http://localhost:8080/rest/\"," +
-            "\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36\"}";
+    private static final String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36";
+    private static final String userData = "{\"baseURL\":\"http://localhost:8080/rest/\",\"userAgent\":\"" +
+            userAgent + "\"}";
 
     private static final String pid = "0f/69/a3/fe/0f69a3fe-2526-4d2a-a842-cf475a3b9858";
 
@@ -102,7 +110,7 @@ public class InternalAuditorTest {
 
     @Before
     public void setUp() {
-        testTnternalAuditor = new InternalAuditor();
+        testTnternalAuditor = spy(new InternalAuditor());
         initMocks(this);
         setField(testTnternalAuditor, "eventBus", mockBus);
         setField(testTnternalAuditor, "repository", mockRepository);
@@ -146,15 +154,24 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).addMixin("fedora:Resource");
-        verify(mockNode).setProperty("rdf:type", new String[]{AUDIT + "InternalEvent", "premis:Event",
-                PROV + "InstantaneousEvent"});
-        verify(mockNode).setProperty("premis:hasEventDateTime", "2015-04-10T14:30:36Z", PropertyType.DATE);
-        verify(mockNode).setProperty("premis:hasEventRelatedObject",
-                "http://localhost:8080/rest/non/audit/container/path", PropertyType.URI);
-        verify(mockNode).setProperty("premis:hasEventRelatedAgent", new String[]{userID, "Mozilla/5.0 (Macintosh; " +
-                "Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.76 Safari/537.36"});
-        verify(mockNode).setProperty("premis:hasEventType", OBJECT_ADD, PropertyType.URI);
+        //verify(mockNode).addMixin("fedora:Resource");
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+                eq(createResource(AUDIT + "InternalEvent")));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+                eq(createResource(PREMIS + "Event")));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+                eq(createResource(PROV + "InstantaneousEvent")));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventDateTime"),
+                eq(createTypedLiteral("2015-04-10T14:30:36Z", XSDdateTime)));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventRelatedAgent"),
+                eq(createTypedLiteral(userID, XSDstring)));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventRelatedAgent"),
+                eq(createTypedLiteral(userAgent, XSDstring)));
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(OBJECT_ADD)));
+
+        verify(mockContainer).setURIProperty(eq("premis:hasEventRelatedObject"),
+                eq(new URI("http://localhost:8080/rest/non/audit/container/path")));
     }
 
     @Test
@@ -165,7 +182,8 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).setProperty("premis:hasEventType", OBJECT_REM, PropertyType.URI);
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(OBJECT_REM)));
     }
 
     @Test
@@ -177,7 +195,8 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).setProperty("premis:hasEventType", METADATA_MOD, PropertyType.URI);
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(METADATA_MOD)));
     }
 
     @Test
@@ -191,7 +210,8 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).setProperty("premis:hasEventType", CONTENT_ADD, PropertyType.URI);
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(CONTENT_ADD)));
     }
 
     @Test
@@ -203,7 +223,8 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).setProperty("premis:hasEventType", CONTENT_MOD, PropertyType.URI);
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(CONTENT_MOD)));
     }
 
     @Test
@@ -214,7 +235,8 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(mockNode).setProperty("premis:hasEventType", CONTENT_REM, PropertyType.URI);
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
+                eq(createResource(CONTENT_REM)));
     }
 
     private static FedoraEvent setupMockEvent(final Set<Integer> eventTypes,
@@ -222,7 +244,7 @@ public class InternalAuditorTest {
         final FedoraEvent mockFedoraEvent = mock(FedoraEvent.class);
         when(mockFedoraEvent.getDate()).thenReturn(timestamp);
         when(mockFedoraEvent.getUserID()).thenReturn(userID);
-        when(mockFedoraEvent.getUserData()).thenReturn(userAgent);
+        when(mockFedoraEvent.getUserData()).thenReturn(userData);
         when(mockFedoraEvent.getPath()).thenReturn("/non/audit/container/path");
         when(mockFedoraEvent.getTypes()).thenReturn(eventTypes);
         when(mockFedoraEvent.getProperties()).thenReturn(eventProperties);
