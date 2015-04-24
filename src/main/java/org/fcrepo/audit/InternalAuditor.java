@@ -47,7 +47,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.jcr.RepositoryException;
 
-import org.fcrepo.kernel.impl.rdf.impl.DefaultIdentifierTranslator;
+import org.fcrepo.kernel.impl.rdf.impl.PrefixingIdentifierTranslator;
 import org.fcrepo.kernel.exception.RepositoryRuntimeException;
 import org.fcrepo.kernel.identifiers.PidMinter;
 import org.fcrepo.kernel.models.FedoraResource;
@@ -258,7 +258,7 @@ public class InternalAuditor implements Auditor {
                 m.add(createStatement(s, PREMIS_TYPE, createResource(auditEventType)));
             }
 
-            auditResource.replaceProperties(new DefaultIdentifierTranslator(session, baseURL + "/"), m,
+            auditResource.replaceProperties(new PrefixingIdentifierTranslator(session, baseURL + "/"), m,
                     new RdfStream(), containerService);
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
