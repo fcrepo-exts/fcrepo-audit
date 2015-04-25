@@ -22,13 +22,6 @@ import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
 
-import static org.fcrepo.audit.AuditNamespaces.AUDIT;
-import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
-import static org.fcrepo.audit.AuditNamespaces.PREMIS;
-import static org.fcrepo.audit.AuditNamespaces.PROV;
-import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
-import static org.fcrepo.kernel.RdfLexicon.RDF_NAMESPACE;
-import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -53,7 +46,6 @@ import org.fcrepo.kernel.identifiers.PidMinter;
 import org.fcrepo.kernel.models.FedoraResource;
 import org.fcrepo.kernel.observer.FedoraEvent;
 import org.fcrepo.kernel.services.ContainerService;
-import org.fcrepo.kernel.utils.EventType;
 import org.fcrepo.kernel.utils.iterators.RdfStream;
 import org.fcrepo.mint.UUIDPathMinter;
 
@@ -69,9 +61,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -147,15 +137,16 @@ public class InternalAuditor implements Auditor {
         try {
             LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
             boolean isParentNodeLastModifiedEvent = false;
-            final String eventType = getEventURIs(event.getTypes());
+            final String eventType = AuditUtils.getEventURIs(event.getTypes());
             final Set<String> properties = event.getProperties();
-            if (eventType.contains(PROPERTY_CHANGED)) {
+            if (eventType.contains(AuditProperties.PROPERTY_CHANGED)) {
                 isParentNodeLastModifiedEvent = true;
                 final Iterator<String> propertiesIter = properties.iterator();
                 String property;
                 while (properties.iterator().hasNext()) {
                     property = propertiesIter.next();
-                    if (!property.equals(LAST_MODIFIED) && !property.equals(LAST_MODIFIED_BY)) {
+                    if (!property.equals(AuditProperties.LAST_MODIFIED) &&
+                            !property.equals(AuditProperties.LAST_MODIFIED_BY)) {
                         /* adding/removing a file updates the lastModified property of the parent container,
                         so ignore updates when only lastModified is changed */
                         isParentNodeLastModifiedEvent = false;
@@ -180,32 +171,6 @@ public class InternalAuditor implements Auditor {
         LOGGER.debug("Tearing down: {}", this.getClass().getCanonicalName());
         eventBus.unregister(this);
     }
-
-    // namespaces and properties
-    private static final String INTERNAL_EVENT = AUDIT + "InternalEvent";
-    private static final String PREMIS_EVENT = PREMIS + "Event";
-    private static final String PROV_EVENT = PROV + "InstantaneousEvent";
-
-    private static final String CONTENT_MOD = AUDIT + "contentModification";
-    private static final String CONTENT_REM = AUDIT + "contentRemoval";
-    private static final String METADATA_MOD = AUDIT + "metadataModification";
-
-    private static final String CONTENT_ADD = EVENT_TYPE + "ing";
-    private static final String OBJECT_ADD = EVENT_TYPE + "cre";
-    private static final String OBJECT_REM = EVENT_TYPE + "del";
-
-    private static final String PREMIS_TIME = PREMIS + "hasEventDateTime";
-    private static final String PREMIS_AGENT = PREMIS + "hasEventRelatedAgent";
-    private static final String PREMIS_TYPE = PREMIS + "hasEventType";
-
-    private static final String RDF_TYPE = RDF_NAMESPACE + "type";
-
-    private static final String HAS_CONTENT = REPOSITORY + "hasContent";
-    private static final String LAST_MODIFIED = REPOSITORY + "lastModified";
-    private static final String LAST_MODIFIED_BY = REPOSITORY + "lastModifiedBy";
-    private static final String NODE_ADDED = REPOSITORY + "NODE_ADDED";
-    private static final String NODE_REMOVED = REPOSITORY + "NODE_REMOVED";
-    private static final String PROPERTY_CHANGED = REPOSITORY + "PROPERTY_CHANGED";
 
     // JCR property name, not URI
     private static final String PREMIS_OBJ = "premis:hasEventRelatedObject";
@@ -237,9 +202,9 @@ public class InternalAuditor implements Auditor {
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
             final String eventDate = df.format(new Date(timestamp));
             final String userID = event.getUserID();
-            final String eventType = getEventURIs(event.getTypes());
+            final String eventType = AuditUtils.getEventURIs(event.getTypes());
             final String properties = Joiner.on(',').join(event.getProperties());
-            final String auditEventType = getAuditEventType(eventType, properties);
+            final String auditEventType = AuditUtils.getAuditEventType(eventType, properties);
             final FedoraResource auditResource = containerService.findOrCreate(session,
                     AUDIT_CONTAINER_LOCATION + "/" + uuid);
 
@@ -248,14 +213,14 @@ public class InternalAuditor implements Auditor {
             final Model m = createDefaultModel();
             final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + uuid;
             final Resource s = createResource(auditResourceURI);
-            m.add(createStatement(s, RDF_TYPE, createResource(INTERNAL_EVENT)));
-            m.add(createStatement(s, RDF_TYPE, createResource(PREMIS_EVENT)));
-            m.add(createStatement(s, RDF_TYPE, createResource(PROV_EVENT)));
-            m.add(createStatement(s, PREMIS_TIME, createTypedLiteral(eventDate, XSDdateTime)));
-            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userID, XSDstring)));
-            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userAgent, XSDstring)));
+            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.INTERNAL_EVENT)));
+            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.PREMIS_EVENT)));
+            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.PROV_EVENT)));
+            m.add(createStatement(s, AuditProperties.PREMIS_TIME, createTypedLiteral(eventDate, XSDdateTime)));
+            m.add(createStatement(s, AuditProperties.PREMIS_AGENT, createTypedLiteral(userID, XSDstring)));
+            m.add(createStatement(s, AuditProperties.PREMIS_AGENT, createTypedLiteral(userAgent, XSDstring)));
             if (auditEventType != null) {
-                m.add(createStatement(s, PREMIS_TYPE, createResource(auditEventType)));
+                m.add(createStatement(s, AuditProperties.PREMIS_TYPE, createResource(auditEventType)));
             }
 
             auditResource.replaceProperties(new PrefixingIdentifierTranslator(session, baseURL + "/"), m,
@@ -277,54 +242,5 @@ public class InternalAuditor implements Auditor {
     @VisibleForTesting
     protected Statement createStatement(final Resource subject, final String property, final RDFNode object) {
         return ResourceFactory.createStatement(subject, createProperty(property), object);
-    }
-
-    /**
-     * Returns the comma event types string for the integer event types.
-     *
-     * @param types
-     * @return
-     */
-    private static String getEventURIs(final Set<Integer> types) {
-        final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<Integer, String>() {
-
-            @Override
-            public String apply(final Integer type) {
-                return REPOSITORY_NAMESPACE + EventType.valueOf(type);
-            }
-        }));
-        LOGGER.debug("Constructed event type URIs: {}", uris);
-        return uris;
-    }
-
-    /**
-     * Returns the Audit event type based on fedora event type and properties.
-     *
-     * @param eventType
-     * @param properties
-     * @return
-     */
-    public static String getAuditEventType(final String eventType, final String properties) {
-        // mapping event type/properties to audit event type
-        if (eventType.contains(NODE_ADDED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                return CONTENT_ADD;
-            } else {
-                return OBJECT_ADD;
-            }
-        } else if (eventType.contains(NODE_REMOVED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                return CONTENT_REM;
-            } else {
-                return OBJECT_REM;
-            }
-        } else if (eventType.contains(PROPERTY_CHANGED)) {
-            if (properties != null && properties.contains(HAS_CONTENT)) {
-                return CONTENT_MOD;
-            } else {
-                return METADATA_MOD;
-            }
-        }
-        return null;
     }
 }

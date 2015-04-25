@@ -33,6 +33,9 @@
     <spring.version>4.1.1.RELEASE</spring.version>
     <!-- default properties that can be altered on the command line -->
     <fcrepo.test.context.path />
+    <!-- osgi bundle configuration -->
+    <fcrepo.osgi.export.pkg>org.fcrepo.audit.*</fcrepo.osgi.export.pkg>
+    <fcrepo.osgi.import.pkg />
   </properties>
 
   <dependencyManagement>
@@ -107,6 +110,20 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-Name>${project.artifactId}</Bundle-Name>
+            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>${fcrepo.osgi.export.pkg};version=${project.version}</Export-Package>
+            <Import-Package>
+              ${fcrepo.osgi.import.pkg},
+              *
+            </Import-Package>
+            <Embed-Transitive>true</Embed-Transitive>
+            <Implementation-Title>${project.name}</Implementation-Title>
+            <Implementation-Version>${project.version}</Implementation-Version>
+          </instructions>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
