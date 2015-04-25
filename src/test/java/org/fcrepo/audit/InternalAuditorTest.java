@@ -25,6 +25,7 @@ import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.kernel.RdfLexicon.RDF_NAMESPACE;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -238,6 +239,32 @@ public class InternalAuditorTest {
         verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
                 eq(createResource(CONTENT_REM)));
     }
+
+    @Test
+    public void testGetAuditEventTypeCreation() throws Exception {
+        final String eventType = REPOSITORY + "NODE_ADDED," + REPOSITORY + "PROPERTY_ADDED";
+        final String properties = REPOSITORY + "lastModified," + REPOSITORY + "primaryType," +
+                REPOSITORY + "lastModifiedBy," + REPOSITORY + "created," + REPOSITORY + "mixinTypes," +
+                REPOSITORY + "createdBy," + REPOSITORY + "uuid";
+        assertEquals(AuditUtils.getAuditEventType(eventType, properties), OBJECT_ADD);
+    }
+
+    @Test
+    public void testGetAuditEventTypeModification() throws Exception {
+        final String eventType = REPOSITORY + "PROPERTY_CHANGED";
+        final String properties = REPOSITORY + "lastModified," + REPOSITORY + "primaryType," +
+                REPOSITORY + "lastModifiedBy," + REPOSITORY + "created," + REPOSITORY + "mixinTypes," +
+                REPOSITORY + "createdBy," + REPOSITORY + "uuid";
+        assertEquals(AuditUtils.getAuditEventType(eventType, properties), METADATA_MOD);
+    }
+
+    @Test
+    public void testGetAuditEventTypeRemoval() throws Exception {
+        final String eventType = REPOSITORY + "NODE_REMOVED";
+        final String properties = "";
+        assertEquals(AuditUtils.getAuditEventType(eventType, properties), OBJECT_REM);
+    }
+
 
     private static FedoraEvent setupMockEvent(final Set<Integer> eventTypes,
                                            final Set<String> eventProperties) throws RepositoryException {

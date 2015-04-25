@@ -19,7 +19,8 @@ package org.fcrepo.audit;
  * @author mohideen
  * @date 4/15/15.
  */
-public class AuditNamespaces {
+public final class AuditNamespaces {
+
     public static final String REPOSITORY = "http://fedora.info/definitions/v4/repository#";
     public static final String AUDIT = "http://fedora.info/definitions/v4/audit#";
     public static final String EVENT_TYPE = "http://id.loc.gov/vocabulary/preservation/eventType/";
