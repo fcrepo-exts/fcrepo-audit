@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-  <logger name="org.fcrepo.transform" additivity="false" level="${fcrepo.log.transform:-INFO}">
+  <logger name="org.fcrepo.audit" additivity="false" level="${fcrepo.log.transform:-DEBUG}">
     <appender-ref ref="STDOUT"/>
   </logger>
   <logger name="org.fcrepo" additivity="false" level="${fcrepo.log:-INFO}">
