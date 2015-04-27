@@ -134,32 +134,28 @@ public class InternalAuditor implements Auditor {
      */
     @Subscribe
     public void recordEvent(final FedoraEvent event) throws RepositoryRuntimeException, IOException {
-        try {
-            LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
-            boolean isParentNodeLastModifiedEvent = false;
-            final String eventType = AuditUtils.getEventURIs(event.getTypes());
-            final Set<String> properties = event.getProperties();
-            if (eventType.contains(AuditProperties.PROPERTY_CHANGED)) {
-                isParentNodeLastModifiedEvent = true;
-                final Iterator<String> propertiesIter = properties.iterator();
-                String property;
-                while (properties.iterator().hasNext()) {
-                    property = propertiesIter.next();
-                    if (!property.equals(AuditProperties.LAST_MODIFIED) &&
-                            !property.equals(AuditProperties.LAST_MODIFIED_BY)) {
-                        /* adding/removing a file updates the lastModified property of the parent container,
-                        so ignore updates when only lastModified is changed */
-                        isParentNodeLastModifiedEvent = false;
-                        break;
-                    }
+        LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
+        boolean isParentNodeLastModifiedEvent = false;
+        final String eventType = AuditUtils.getEventURIs(event.getTypes());
+        final Set<String> properties = event.getProperties();
+        if (eventType.contains(AuditProperties.PROPERTY_CHANGED)) {
+            isParentNodeLastModifiedEvent = true;
+            final Iterator<String> propertiesIter = properties.iterator();
+            String property;
+            while (properties.iterator().hasNext()) {
+                property = propertiesIter.next();
+                if (!property.equals(AuditProperties.LAST_MODIFIED) &&
+                        !property.equals(AuditProperties.LAST_MODIFIED_BY)) {
+                    /* adding/removing a file updates the lastModified property of the parent container,
+                    so ignore updates when only lastModified is changed */
+                    isParentNodeLastModifiedEvent = false;
+                    break;
                 }
             }
-            if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
-                    && !isParentNodeLastModifiedEvent) {
-                createAuditNode(event);
-            }
-        } catch (RepositoryException e) {
-            throw new RepositoryRuntimeException(e);
+        }
+        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
+                && !isParentNodeLastModifiedEvent) {
+            createAuditNode(event);
         }
     }
 
