@@ -55,6 +55,7 @@ import org.fcrepo.kernel.services.ContainerService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 
@@ -124,6 +125,7 @@ public class InternalAuditorTest {
     public void testRegister() throws RepositoryException, LoginException {
         System.setProperty(AUDIT_CONTAINER, "/audit");
         when(mockRepository.login()).thenReturn(mockSession);
+        setField(testTnternalAuditor, "jcrTools", mock(JcrTools.class));
         testTnternalAuditor.register();
         verify(mockContainerService).findOrCreate(mockSession, "/audit");
         verify(mockBus).register(any(InternalAuditor.class));

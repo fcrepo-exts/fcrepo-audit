@@ -1,0 +1,9 @@
+/*
+ * Audit namespaces
+ */
+<audit = 'http://fedora.info/definitions/v4/audit#'>
+<prov  = 'http://www.w3.org/ns/prov#'>
+
+[audit:ExternalEvent] mixin
+[audit:InternalEvent] mixin
+[prov:InstantenousEvent] mixin
