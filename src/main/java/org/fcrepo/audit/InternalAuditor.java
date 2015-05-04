@@ -220,7 +220,7 @@ public class InternalAuditor implements Auditor {
             }
 
             auditResource.replaceProperties(new PrefixingIdentifierTranslator(session, baseURL + "/"), m,
-                    new RdfStream(), containerService);
+                    new RdfStream());
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
             try {
