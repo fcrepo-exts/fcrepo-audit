@@ -49,6 +49,7 @@ import org.fcrepo.kernel.services.ContainerService;
 import org.fcrepo.kernel.utils.iterators.RdfStream;
 import org.fcrepo.mint.UUIDPathMinter;
 
+import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
@@ -92,6 +93,7 @@ public class InternalAuditor implements Auditor {
     private ContainerService containerService;
 
     private Session session;
+    private static JcrTools jcrTools = new JcrTools(true);
 
     private static final PidMinter pidMinter =  new UUIDPathMinter();
 
@@ -115,6 +117,10 @@ public class InternalAuditor implements Auditor {
                 }
                 session = repository.login();
                 containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION);
+
+                LOGGER.debug("Registering audit CND");
+                jcrTools.registerNodeTypes(session, "audit.cnd");
+
                 session.save();
             } else {
                 LOGGER.warn("Cannot Initialize: {}", this.getClass().getCanonicalName());
