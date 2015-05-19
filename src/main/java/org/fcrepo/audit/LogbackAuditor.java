@@ -19,7 +19,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.jcr.RepositoryException;
 
 import org.fcrepo.kernel.observer.FedoraEvent;
 
@@ -32,7 +31,7 @@ import com.google.common.eventbus.Subscribe;
  * A proof-of-concept Auditor implementation that uses Logback.
  *
  * @author Edwin Shin
- * @date 2014
+ * @since 2014
  */
 public class LogbackAuditor implements Auditor {
 
@@ -55,7 +54,7 @@ public class LogbackAuditor implements Auditor {
 
     @Override
     @Subscribe
-    public void recordEvent(final FedoraEvent e) throws RepositoryException {
+    public void recordEvent(final FedoraEvent e) {
         LOGGER.info("{} {}", e.getUserID(), e.getPath());
     }
 }

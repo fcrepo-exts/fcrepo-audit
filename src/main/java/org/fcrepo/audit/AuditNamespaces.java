@@ -17,7 +17,7 @@ package org.fcrepo.audit;
 
 /**
  * @author mohideen
- * @date 4/15/15.
+ * @since 4/15/15.
  */
 public final class AuditNamespaces {
 
