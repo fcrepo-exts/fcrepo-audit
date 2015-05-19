@@ -136,10 +136,10 @@ public class InternalAuditor implements Auditor {
      *
      * @param event
      *        The {@link FedoraEvent} to record.
-     * @throws RepositoryRuntimeException
+     * @throws RepositoryRuntimeException on error
      */
     @Subscribe
-    public void recordEvent(final FedoraEvent event) throws RepositoryRuntimeException, IOException {
+    public void recordEvent(final FedoraEvent event) throws RepositoryRuntimeException {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
         boolean isParentNodeLastModifiedEvent = false;
         final String eventType = AuditUtils.getEventURIs(event.getTypes());
@@ -161,7 +161,11 @@ public class InternalAuditor implements Auditor {
         }
         if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
                 && !isParentNodeLastModifiedEvent) {
-            createAuditNode(event);
+            try {
+                createAuditNode(event);
+            } catch (IOException e) {
+                throw new RepositoryRuntimeException(e);
+            }
         }
     }
 
@@ -180,8 +184,9 @@ public class InternalAuditor implements Auditor {
     /**
      * Creates a node for the audit event under the configured container.
      *
-     * @param event
-     * @throws RepositoryRuntimeException
+     * @param event to be persisted in the repository
+     * @throws RepositoryRuntimeException on error
+     * @throws java.io.IOException on json mapping error
      */
     public void createAuditNode(final FedoraEvent event) throws RepositoryRuntimeException, IOException {
         try {

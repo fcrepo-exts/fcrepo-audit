@@ -39,8 +39,8 @@ public class AuditUtils {
     /**
      * Returns the comma event types string for the integer event types.
      *
-     * @param types
-     * @return
+     * @param types to be converted to URIs
+     * @return comma-delimited string of type URIs
      */
     public static String getEventURIs(final Set<Integer> types) {
         final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<Integer, String>() {
@@ -57,9 +57,9 @@ public class AuditUtils {
     /**
      * Returns the Audit event type based on fedora event type and properties.
      *
-     * @param eventType
-     * @param properties
-     * @return
+     * @param eventType from Fedora
+     * @param properties associated with the Fedora event
+     * @return Audit event
      */
     public static String getAuditEventType(final String eventType, final String properties) {
         // mapping event type/properties to audit event type
