@@ -64,7 +64,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * @author mohideen
- * @date 4/16/15.
+ * @since 4/16/15.
  */
 public class InternalAuditorTest {
 
