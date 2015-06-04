@@ -42,12 +42,10 @@ import javax.jcr.RepositoryException;
 
 import org.fcrepo.kernel.impl.rdf.impl.PrefixingIdentifierTranslator;
 import org.fcrepo.kernel.exception.RepositoryRuntimeException;
-import org.fcrepo.kernel.identifiers.PidMinter;
 import org.fcrepo.kernel.models.FedoraResource;
 import org.fcrepo.kernel.observer.FedoraEvent;
 import org.fcrepo.kernel.services.ContainerService;
 import org.fcrepo.kernel.utils.iterators.RdfStream;
-import org.fcrepo.mint.UUIDPathMinter;
 
 import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Repository;
@@ -94,8 +92,6 @@ public class InternalAuditor implements Auditor {
 
     private Session session;
     private static JcrTools jcrTools = new JcrTools(true);
-
-    private static final PidMinter pidMinter =  new UUIDPathMinter();
 
     /**
      * Register with the EventBus to receive events.
@@ -190,7 +186,6 @@ public class InternalAuditor implements Auditor {
      */
     public void createAuditNode(final FedoraEvent event) throws RepositoryRuntimeException, IOException {
         try {
-            final String uuid = pidMinter.mintPid();
             final String userData = event.getUserData();
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode json = mapper.readTree(userData);
@@ -213,12 +208,12 @@ public class InternalAuditor implements Auditor {
             final String properties = Joiner.on(',').join(event.getProperties());
             final String auditEventType = AuditUtils.getAuditEventType(eventType, properties);
             final FedoraResource auditResource = containerService.findOrCreate(session,
-                    AUDIT_CONTAINER_LOCATION + "/" + uuid);
+                    AUDIT_CONTAINER_LOCATION + "/" + event.getEventID());
 
-            LOGGER.debug("Audit node {} created for event.", uuid);
+            LOGGER.debug("Audit node {} created for event.", event.getEventID());
 
             final Model m = createDefaultModel();
-            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + uuid;
+            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + event.getEventID();
             final Resource s = createResource(auditResourceURI);
             m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.INTERNAL_EVENT)));
             m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.PREMIS_EVENT)));

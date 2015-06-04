@@ -154,6 +154,8 @@ public class InternalAuditorTest {
                 REPOSITORY + "lastModifiedBy", REPOSITORY + "created", REPOSITORY + "mixinTypes",
                 REPOSITORY + "createdBy", REPOSITORY + "uuid"));
         final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final String eventID = "ab/cd/ef/abcdef12345678";
+        when(mockFedoraEvent.getEventID()).thenReturn(eventID);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -175,6 +177,7 @@ public class InternalAuditorTest {
 
         verify(mockContainer).setURIProperty(eq("premis:hasEventRelatedObject"),
                 eq(new URI("http://localhost:8080/rest/non/audit/container/path")));
+        verify(mockContainerService).findOrCreate( any(Session.class), eq("/audit/" + eventID));
     }
 
     @Test
