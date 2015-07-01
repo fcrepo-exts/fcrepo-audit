@@ -38,6 +38,15 @@
     <fcrepo.osgi.import.pkg />
   </properties>
 
+  <scm>
+    <connection>scm:git:git://github.com/fcrepo4-labs/${project.artifactId}.git
+    </connection>
+    <developerConnection>scm:git:git@github.com:fcrepo4-labs/${project.artifactId}.git
+    </developerConnection>
+    <url>https://github.com/fcrepo4-labs/fcrepo-audit</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
