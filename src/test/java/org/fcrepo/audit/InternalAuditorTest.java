@@ -24,7 +24,7 @@ import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
-import static org.fcrepo.kernel.RdfLexicon.RDF_NAMESPACE;
+import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -48,9 +48,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.security.auth.login.LoginException;
 
-import org.fcrepo.kernel.models.Container;
-import org.fcrepo.kernel.observer.FedoraEvent;
-import org.fcrepo.kernel.services.ContainerService;
+import org.fcrepo.kernel.api.models.Container;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
+import org.fcrepo.kernel.api.services.ContainerService;
 
 import org.junit.Before;
 import org.junit.Test;

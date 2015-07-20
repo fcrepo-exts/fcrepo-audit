@@ -20,7 +20,7 @@ import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
-import static org.fcrepo.kernel.RdfLexicon.RDF_NAMESPACE;
+import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
 
 
 /**

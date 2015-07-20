@@ -15,7 +15,7 @@
  */
 package org.fcrepo.audit;
 
-import org.fcrepo.kernel.observer.FedoraEvent;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
 
 import com.google.common.eventbus.Subscribe;
 

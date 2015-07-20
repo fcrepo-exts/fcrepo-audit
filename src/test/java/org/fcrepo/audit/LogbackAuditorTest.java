@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import org.fcrepo.kernel.observer.FedoraEvent;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
 
 import org.junit.Before;
 import org.junit.Test;
