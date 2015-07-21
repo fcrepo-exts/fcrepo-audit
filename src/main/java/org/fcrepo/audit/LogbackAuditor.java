@@ -20,7 +20,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.fcrepo.kernel.observer.FedoraEvent;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
 
 import org.slf4j.Logger;
 

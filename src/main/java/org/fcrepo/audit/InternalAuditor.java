@@ -40,12 +40,12 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.jcr.RepositoryException;
 
-import org.fcrepo.kernel.impl.rdf.impl.PrefixingIdentifierTranslator;
-import org.fcrepo.kernel.exception.RepositoryRuntimeException;
-import org.fcrepo.kernel.models.FedoraResource;
-import org.fcrepo.kernel.observer.FedoraEvent;
-import org.fcrepo.kernel.services.ContainerService;
-import org.fcrepo.kernel.utils.iterators.RdfStream;
+import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
+import org.fcrepo.kernel.api.models.FedoraResource;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
+import org.fcrepo.kernel.api.services.ContainerService;
+import org.fcrepo.kernel.api.utils.iterators.RdfStream;
+import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
 
 import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Repository;
