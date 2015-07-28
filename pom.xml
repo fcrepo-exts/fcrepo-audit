@@ -14,6 +14,19 @@
   <description>The Fedora Commons repository audit module: Provides audit functionality for the Fedora Commons repository framework.</description>
   <packaging>bundle</packaging>
 
+  <repositories>
+    <repository>
+      <id>snapshots-repo</id>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <properties>
     <!-- Use ${project_name} instead of ${project.artifactId} to avoid incorrect
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
