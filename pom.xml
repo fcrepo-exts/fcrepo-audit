@@ -52,11 +52,11 @@
   </properties>
 
   <scm>
-    <connection>scm:git:git://github.com/fcrepo4-labs/${project.artifactId}.git
+    <connection>scm:git:git://github.com/fcrepo4-exts/${project.artifactId}.git
     </connection>
-    <developerConnection>scm:git:git@github.com:fcrepo4-labs/${project.artifactId}.git
+    <developerConnection>scm:git:git@github.com:fcrepo4-exts/${project.artifactId}.git
     </developerConnection>
-    <url>https://github.com/fcrepo4-labs/fcrepo-audit</url>
+    <url>https://github.com/fcrepo4-exts/fcrepo-audit</url>
     <tag>HEAD</tag>
   </scm>
 
