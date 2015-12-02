@@ -45,13 +45,13 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
 import javax.security.auth.login.LoginException;
 
 import org.fcrepo.kernel.api.models.Container;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
 
+import org.fcrepo.kernel.api.utils.EventType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -148,7 +148,7 @@ public class InternalAuditorTest {
 
     @Test
     public void testNodeAddedWithProperties() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.NODE_ADDED, Event.PROPERTY_ADDED));
+        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_ADDED, EventType.PROPERTY_ADDED));
         final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified", REPOSITORY +
                         "primaryType",
                 REPOSITORY + "lastModifiedBy", REPOSITORY + "created", REPOSITORY + "mixinTypes",
@@ -182,7 +182,7 @@ public class InternalAuditorTest {
 
     @Test
     public void testNodeRemoved() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.NODE_REMOVED));
+        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_REMOVED));
         final Set<String> eventProps = new HashSet<>();
         final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
@@ -194,7 +194,8 @@ public class InternalAuditorTest {
 
     @Test
     public void testPropertiesChanged() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.PROPERTY_CHANGED, Event.PROPERTY_ADDED));
+        final Set<EventType> eventTypes =
+                new HashSet<>(Arrays.asList(EventType.PROPERTY_CHANGED, EventType.PROPERTY_ADDED));
         final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
                 "http://purl.org/dc/elements/1.1/title"));
         final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
@@ -207,7 +208,7 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileAdded() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.NODE_ADDED, Event.PROPERTY_ADDED));
+        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_ADDED, EventType.PROPERTY_ADDED));
         final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
                 REPOSITORY + "primaryType", REPOSITORY + "lastModifiedBy", REPOSITORY + "created",
                 REPOSITORY + "mixinTypes", REPOSITORY + "createdBy", REPOSITORY + "uuid", REPOSITORY + "hasContent",
@@ -222,7 +223,7 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileChanged() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.PROPERTY_CHANGED));
+        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.PROPERTY_CHANGED));
         final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
                 REPOSITORY + "hasContent", "premis:hasSize", "premis:hasOriginalName", REPOSITORY + "digest"));
         final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
@@ -235,7 +236,7 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileRemoved() throws Exception {
-        final Set<Integer> eventTypes = new HashSet<>(Arrays.asList(Event.NODE_REMOVED));
+        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_REMOVED));
         final Set<String> eventProps = new HashSet<>(Arrays.asList( REPOSITORY + "hasContent"));
         final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
@@ -271,7 +272,7 @@ public class InternalAuditorTest {
     }
 
 
-    private static FedoraEvent setupMockEvent(final Set<Integer> eventTypes,
+    private static FedoraEvent setupMockEvent(final Set<EventType> eventTypes,
                                            final Set<String> eventProperties) throws RepositoryException {
         final FedoraEvent mockFedoraEvent = mock(FedoraEvent.class);
         when(mockFedoraEvent.getDate()).thenReturn(timestamp);

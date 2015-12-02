@@ -42,12 +42,12 @@ public class AuditUtils {
      * @param types to be converted to URIs
      * @return comma-delimited string of type URIs
      */
-    public static String getEventURIs(final Set<Integer> types) {
-        final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<Integer, String>() {
+    public static String getEventURIs(final Set<EventType> types) {
+        final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<EventType, String>() {
 
             @Override
-            public String apply(final Integer type) {
-                return AuditNamespaces.REPOSITORY + EventType.valueOf(type);
+            public String apply(final EventType type) {
+                return AuditNamespaces.REPOSITORY + type;
             }
         }));
         LOGGER.debug("Constructed event type URIs: {}", uris);
