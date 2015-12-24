@@ -51,7 +51,7 @@ import org.fcrepo.kernel.api.models.Container;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
 
-import org.fcrepo.kernel.api.utils.EventType;
+import org.fcrepo.kernel.api.observer.EventType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
