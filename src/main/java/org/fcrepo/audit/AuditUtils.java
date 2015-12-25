@@ -19,7 +19,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Set;
 
-import org.fcrepo.kernel.api.utils.EventType;
+import org.fcrepo.kernel.api.observer.EventType;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
