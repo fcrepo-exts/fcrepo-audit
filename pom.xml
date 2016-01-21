@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.5.0-RC-1</version>
+    <version>4.4.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>fcrepo-audit</artifactId>
@@ -34,8 +34,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.copyrightYear>2015</project.copyrightYear>
-    <fcrepo.version>4.5.0-RC-1</fcrepo.version>
-    <fcrepo.mint.version>4.5.0-RC-1</fcrepo.mint.version>
+    <fcrepo.version>4.4.1-SNAPSHOT</fcrepo.version>
+    <fcrepo.mint.version>4.4.1-SNAPSHOT</fcrepo.mint.version>
     <hk2.version>2.3.0</hk2.version>
     <logback.version>1.1.2</logback.version>
     <mockito.version>1.10.8</mockito.version>
