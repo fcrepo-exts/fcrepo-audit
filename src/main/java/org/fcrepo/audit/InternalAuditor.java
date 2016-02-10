@@ -38,6 +38,7 @@ import java.util.TimeZone;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
@@ -230,7 +231,7 @@ public class InternalAuditor implements Auditor {
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
             try {
-                auditResource.setURIProperty(PREMIS_OBJ, new URI(uri));
+                auditResource.getNode().setProperty(PREMIS_OBJ, new URI(uri).toString(), PropertyType.URI);
             } catch (URISyntaxException e) {
                 LOGGER.warn("Error creating URI for repository resource {}", uri);
             }
