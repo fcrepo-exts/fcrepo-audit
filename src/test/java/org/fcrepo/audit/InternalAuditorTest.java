@@ -38,12 +38,12 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.security.auth.login.LoginException;
 
@@ -175,8 +175,8 @@ public class InternalAuditorTest {
         verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventType"),
                 eq(createResource(OBJECT_ADD)));
 
-        verify(mockContainer).setURIProperty(eq("premis:hasEventRelatedObject"),
-                eq(new URI("http://localhost:8080/rest/non/audit/container/path")));
+        verify(mockNode).setProperty(eq("premis:hasEventRelatedObject"),
+                eq("http://localhost:8080/rest/non/audit/container/path"), eq(PropertyType.URI));
         verify(mockContainerService).findOrCreate( any(Session.class), eq("/audit/" + eventID));
     }
 
