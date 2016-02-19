@@ -21,7 +21,7 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
-
+import static java.util.EnumSet.noneOf;
 import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -41,11 +41,12 @@ import javax.inject.Inject;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.fcrepo.kernel.api.RdfContext;
 import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
+import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
-import org.fcrepo.kernel.api.utils.iterators.RdfStream;
 import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
 
 import org.modeshape.jcr.api.JcrTools;
@@ -96,10 +97,9 @@ public class InternalAuditor implements Auditor {
 
     /**
      * Register with the EventBus to receive events.
-     * @throws RepositoryRuntimeException
      */
     @PostConstruct
-    public void register() throws RepositoryRuntimeException {
+    public void register() {
         try {
             AUDIT_CONTAINER_LOCATION = System.getProperty(AUDIT_CONTAINER);
             if (AUDIT_CONTAINER_LOCATION != null) {
@@ -133,10 +133,9 @@ public class InternalAuditor implements Auditor {
      *
      * @param event
      *        The {@link FedoraEvent} to record.
-     * @throws RepositoryRuntimeException on error
      */
     @Subscribe
-    public void recordEvent(final FedoraEvent event) throws RepositoryRuntimeException {
+    public void recordEvent(final FedoraEvent event) {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
         boolean isParentNodeLastModifiedEvent = false;
         final String eventType = AuditUtils.getEventURIs(event.getTypes());
@@ -182,10 +181,9 @@ public class InternalAuditor implements Auditor {
      * Creates a node for the audit event under the configured container.
      *
      * @param event to be persisted in the repository
-     * @throws RepositoryRuntimeException on error
      * @throws java.io.IOException on json mapping error
      */
-    public void createAuditNode(final FedoraEvent event) throws RepositoryRuntimeException, IOException {
+    public void createAuditNode(final FedoraEvent event) throws IOException {
         try {
             final String userData = event.getUserData();
             final ObjectMapper mapper = new ObjectMapper();
@@ -226,8 +224,10 @@ public class InternalAuditor implements Auditor {
                 m.add(createStatement(s, AuditProperties.PREMIS_TYPE, createResource(auditEventType)));
             }
 
-            auditResource.replaceProperties(new PrefixingIdentifierTranslator(session, baseURL + "/"), m,
-                    new RdfStream());
+            final IdentifierConverter<Resource, FedoraResource> translator =
+                new PrefixingIdentifierTranslator(session, baseURL + "/");
+            auditResource.replaceProperties(translator, m,
+                    auditResource.getTriples(translator, noneOf(RdfContext.class)));
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
             try {
