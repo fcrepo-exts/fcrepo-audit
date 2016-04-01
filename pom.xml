@@ -34,8 +34,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.copyrightYear>2015</project.copyrightYear>
-    <fcrepo.version>4.4.1-SNAPSHOT</fcrepo.version>
-    <fcrepo.mint.version>4.4.1-SNAPSHOT</fcrepo.mint.version>
     <hk2.version>2.3.0</hk2.version>
     <logback.version>1.1.2</logback.version>
     <mockito.version>1.10.8</mockito.version>
@@ -67,7 +65,7 @@
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-jcr-bom</artifactId>
-        <version>${fcrepo.version}</version>
+        <version>${project.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -93,7 +91,6 @@
     <dependency>
       <groupId>org.modeshape</groupId>
       <artifactId>modeshape-jcr-api</artifactId>
-      <version>${modeshape.version}</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.hk2.external</groupId>
