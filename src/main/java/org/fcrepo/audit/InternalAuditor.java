@@ -152,10 +152,9 @@ public class InternalAuditor implements Auditor {
         /* adding/removing a file updates the lastModified property of the parent container,
            so ignore updates when only lastModified is changed. */
         if (eventType.contains(PROPERTY_CHANGED)) {
-            final String changedProperty = event.getProperties().stream().filter(p ->
+            isParentNodeLastModifiedEvent = !event.getProperties().stream().filter(p ->
                 !p.equals(LAST_MODIFIED) && !p.equals(LAST_MODIFIED_BY)
-            ).findFirst().orElse("");
-            isParentNodeLastModifiedEvent = changedProperty.equals("");
+            ).findFirst().isPresent();
         }
 
         if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
