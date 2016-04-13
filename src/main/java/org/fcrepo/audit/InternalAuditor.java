@@ -144,7 +144,7 @@ public class InternalAuditor implements Auditor {
             isParentNodeLastModifiedEvent = true;
             final Iterator<String> propertiesIter = properties.iterator();
             String property;
-            while (properties.iterator().hasNext()) {
+            while (propertiesIter.hasNext()) {
                 property = propertiesIter.next();
                 if (!property.equals(AuditProperties.LAST_MODIFIED) &&
                         !property.equals(AuditProperties.LAST_MODIFIED_BY)) {
