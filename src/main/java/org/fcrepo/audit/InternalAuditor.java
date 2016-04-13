@@ -25,6 +25,17 @@ import static java.util.EnumSet.noneOf;
 import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import static org.fcrepo.audit.AuditProperties.INTERNAL_EVENT;
+import static org.fcrepo.audit.AuditProperties.LAST_MODIFIED;
+import static org.fcrepo.audit.AuditProperties.LAST_MODIFIED_BY;
+import static org.fcrepo.audit.AuditProperties.PREMIS_AGENT;
+import static org.fcrepo.audit.AuditProperties.PREMIS_EVENT;
+import static org.fcrepo.audit.AuditProperties.PREMIS_TIME;
+import static org.fcrepo.audit.AuditProperties.PREMIS_TYPE;
+import static org.fcrepo.audit.AuditProperties.PROPERTY_CHANGED;
+import static org.fcrepo.audit.AuditProperties.PROV_EVENT;
+import static org.fcrepo.audit.AuditProperties.RDF_TYPE;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -139,22 +150,16 @@ public class InternalAuditor implements Auditor {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
         boolean isParentNodeLastModifiedEvent = false;
         final String eventType = AuditUtils.getEventURIs(event.getTypes());
-        final Set<String> properties = event.getProperties();
-        if (eventType.contains(AuditProperties.PROPERTY_CHANGED)) {
-            isParentNodeLastModifiedEvent = true;
-            final Iterator<String> propertiesIter = properties.iterator();
-            String property;
-            while (propertiesIter.hasNext()) {
-                property = propertiesIter.next();
-                if (!property.equals(AuditProperties.LAST_MODIFIED) &&
-                        !property.equals(AuditProperties.LAST_MODIFIED_BY)) {
-                    /* adding/removing a file updates the lastModified property of the parent container,
-                    so ignore updates when only lastModified is changed */
-                    isParentNodeLastModifiedEvent = false;
-                    break;
-                }
-            }
+
+        /* adding/removing a file updates the lastModified property of the parent container,
+           so ignore updates when only lastModified is changed. */
+        if (eventType.contains(PROPERTY_CHANGED)) {
+            final String changedProperty = event.getProperties().stream().filter(p ->
+                !p.equals(LAST_MODIFIED) && !p.equals(LAST_MODIFIED_BY)
+            ).findFirst().orElse("");
+            isParentNodeLastModifiedEvent = changedProperty.equals("");
         }
+
         if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
                 && !isParentNodeLastModifiedEvent) {
             try {
@@ -214,14 +219,14 @@ public class InternalAuditor implements Auditor {
             final Model m = createDefaultModel();
             final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + event.getEventID();
             final Resource s = createResource(auditResourceURI);
-            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.INTERNAL_EVENT)));
-            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.PREMIS_EVENT)));
-            m.add(createStatement(s, AuditProperties.RDF_TYPE, createResource(AuditProperties.PROV_EVENT)));
-            m.add(createStatement(s, AuditProperties.PREMIS_TIME, createTypedLiteral(eventDate, XSDdateTime)));
-            m.add(createStatement(s, AuditProperties.PREMIS_AGENT, createTypedLiteral(userID, XSDstring)));
-            m.add(createStatement(s, AuditProperties.PREMIS_AGENT, createTypedLiteral(userAgent, XSDstring)));
+            m.add(createStatement(s, RDF_TYPE, createResource(INTERNAL_EVENT)));
+            m.add(createStatement(s, RDF_TYPE, createResource(PREMIS_EVENT)));
+            m.add(createStatement(s, RDF_TYPE, createResource(PROV_EVENT)));
+            m.add(createStatement(s, PREMIS_TIME, createTypedLiteral(eventDate, XSDdateTime)));
+            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userID, XSDstring)));
+            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userAgent, XSDstring)));
             if (auditEventType != null) {
-                m.add(createStatement(s, AuditProperties.PREMIS_TYPE, createResource(auditEventType)));
+                m.add(createStatement(s, PREMIS_TYPE, createResource(auditEventType)));
             }
 
             final IdentifierConverter<Resource, FedoraResource> translator =
