@@ -22,6 +22,7 @@ import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static java.util.EnumSet.noneOf;
+import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.getJcrNode;
 import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -232,7 +233,7 @@ public class InternalAuditor implements Auditor {
 
             // set link to impacted object using a URI property to preserve the link if it's deleted
             try {
-                auditResource.getNode().setProperty(PREMIS_OBJ, new URI(uri).toString(), PropertyType.URI);
+                getJcrNode(auditResource).setProperty(PREMIS_OBJ, new URI(uri).toString(), PropertyType.URI);
             } catch (URISyntaxException e) {
                 LOGGER.warn("Error creating URI for repository resource {}", uri);
             }
