@@ -47,9 +47,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.security.auth.login.LoginException;
 
-import org.fcrepo.kernel.api.models.Container;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
+import org.fcrepo.kernel.modeshape.ContainerImpl;
 
 import org.fcrepo.kernel.api.observer.EventType;
 import org.junit.Before;
@@ -97,7 +97,7 @@ public class InternalAuditorTest {
     private Session mockSession;
 
     @Mock
-    private static Container mockContainer;
+    private static ContainerImpl mockContainer;
 
     @Mock
     private static Node mockNode;
@@ -159,7 +159,6 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        //verify(mockNode).addMixin("fedora:Resource");
         verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
                 eq(createResource(AUDIT + "InternalEvent")));
         verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
