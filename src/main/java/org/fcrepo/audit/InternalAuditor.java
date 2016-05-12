@@ -27,13 +27,10 @@ import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import static org.fcrepo.audit.AuditProperties.INTERNAL_EVENT;
-import static org.fcrepo.audit.AuditProperties.LAST_MODIFIED;
-import static org.fcrepo.audit.AuditProperties.LAST_MODIFIED_BY;
 import static org.fcrepo.audit.AuditProperties.PREMIS_AGENT;
 import static org.fcrepo.audit.AuditProperties.PREMIS_EVENT;
 import static org.fcrepo.audit.AuditProperties.PREMIS_TIME;
 import static org.fcrepo.audit.AuditProperties.PREMIS_TYPE;
-import static org.fcrepo.audit.AuditProperties.PROPERTY_CHANGED;
 import static org.fcrepo.audit.AuditProperties.PROV_EVENT;
 import static org.fcrepo.audit.AuditProperties.RDF_TYPE;
 
@@ -147,18 +144,7 @@ public class InternalAuditor implements Auditor {
     @Subscribe
     public void recordEvent(final FedoraEvent event) {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
-        boolean isParentNodeLastModifiedEvent = false;
-        final String eventType = AuditUtils.getEventURIs(event.getTypes());
-
-        /* adding/removing a file updates the lastModified property of the parent container,
-           so ignore updates when only lastModified is changed. */
-        if (eventType.contains(PROPERTY_CHANGED)) {
-            isParentNodeLastModifiedEvent = !event.getProperties().stream().anyMatch(p ->
-                !p.equals(LAST_MODIFIED) && !p.equals(LAST_MODIFIED_BY));
-        }
-
-        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)
-                && !isParentNodeLastModifiedEvent) {
+        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)) {
             try {
                 createAuditNode(event);
             } catch (IOException e) {
