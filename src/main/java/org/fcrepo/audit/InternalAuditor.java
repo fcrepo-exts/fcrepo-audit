@@ -56,7 +56,6 @@ import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
-import org.fcrepo.kernel.api.services.functions.HierarchicalIdentifierSupplier;
 import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
 
 import org.modeshape.jcr.api.JcrTools;
@@ -99,7 +98,7 @@ public class InternalAuditor implements Auditor {
     @Inject
     private ContainerService containerService;
 
-    private static final DefaultPathMinter pathMinter = new DefaultPathMinter();
+    private static final UuidPathMinter pathMinter = new UuidPathMinter();
 
     private Session session;
     private static JcrTools jcrTools = new JcrTools(true);
@@ -237,7 +236,5 @@ public class InternalAuditor implements Auditor {
     protected Statement createStatement(final Resource subject, final String property, final RDFNode object) {
         return ResourceFactory.createStatement(subject, createProperty(property), object);
     }
-
-    private static class DefaultPathMinter implements HierarchicalIdentifierSupplier { }
 
 }
