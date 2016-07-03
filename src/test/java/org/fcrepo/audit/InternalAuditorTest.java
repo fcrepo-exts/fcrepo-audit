@@ -19,12 +19,19 @@ import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
 import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDstring;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
+import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_CREATION;
+import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_DELETION;
+import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_MODIFICATION;
+import static org.fcrepo.kernel.api.observer.OptionalValues.BASE_URL;
+import static org.fcrepo.kernel.api.observer.OptionalValues.USER_AGENT;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -36,10 +43,12 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.collections.Sets.newSet;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -74,15 +83,17 @@ public class InternalAuditorTest {
 
     private static final String identifier = "27c605e4-98c6-4240-86be-f1bb1971d694";
 
-    private static final long timestamp = 1428676236521L;
+    private static final String identifierPath = "27/c6/05/e4/" + identifier;
+
+    private static final Instant timestamp = Instant.ofEpochMilli(1428676236521L);
 
     private static final String userID = "bypassAdmin";
 
     private static final String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36";
-    private static final String userData = "{\"baseURL\":\"http://localhost:8080/rest/\",\"userAgent\":\"" +
-            userAgent + "\"}";
 
-    private static final String pid = "0f/69/a3/fe/0f69a3fe-2526-4d2a-a842-cf475a3b9858";
+    private static final Map<String, String> auxInfo = new HashMap<>();
+
+    private String baseUrl = "http://localhost:8080/rest";
 
     @Mock
     private EventBus mockBus;
@@ -113,6 +124,8 @@ public class InternalAuditorTest {
     @Before
     public void setUp() {
         testTnternalAuditor = spy(new InternalAuditor());
+        auxInfo.put(BASE_URL, baseUrl);
+        auxInfo.put(USER_AGENT, userAgent);
         initMocks(this);
         setField(testTnternalAuditor, "eventBus", mockBus);
         setField(testTnternalAuditor, "repository", mockRepository);
@@ -148,13 +161,10 @@ public class InternalAuditorTest {
 
     @Test
     public void testNodeAddedWithProperties() throws Exception {
-        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_ADDED, EventType.PROPERTY_ADDED));
-        final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified", REPOSITORY +
-                        "primaryType",
-                REPOSITORY + "lastModifiedBy", REPOSITORY + "created", REPOSITORY + "mixinTypes",
-                REPOSITORY + "createdBy", REPOSITORY + "uuid"));
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
-        final String eventID = "ab/cd/ef/abcdef12345678";
+        final Set<EventType> eventTypes = newSet(RESOURCE_CREATION, RESOURCE_MODIFICATION);
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Container");
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
+        final String eventID = "urn:uuid:" + identifier;
         when(mockFedoraEvent.getEventID()).thenReturn(eventID);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
@@ -176,14 +186,14 @@ public class InternalAuditorTest {
 
         verify(mockNode).setProperty(eq("premis:hasEventRelatedObject"),
                 eq("http://localhost:8080/rest/non/audit/container/path"), eq(PropertyType.URI));
-        verify(mockContainerService).findOrCreate( any(Session.class), eq("/audit/" + eventID));
+        verify(mockContainerService).findOrCreate( any(Session.class), eq("/audit/" + identifierPath));
     }
 
     @Test
     public void testNodeRemoved() throws Exception {
-        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_REMOVED));
-        final Set<String> eventProps = new HashSet<>();
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final Set<EventType> eventTypes = singleton(RESOURCE_DELETION);
+        final Set<String> resourceTypes = emptySet();
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -193,11 +203,9 @@ public class InternalAuditorTest {
 
     @Test
     public void testPropertiesChanged() throws Exception {
-        final Set<EventType> eventTypes =
-                new HashSet<>(Arrays.asList(EventType.PROPERTY_CHANGED, EventType.PROPERTY_ADDED));
-        final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
-                "http://purl.org/dc/elements/1.1/title"));
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final Set<EventType> eventTypes = singleton(RESOURCE_MODIFICATION);
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Container");
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -207,12 +215,9 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileAdded() throws Exception {
-        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_ADDED, EventType.PROPERTY_ADDED));
-        final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
-                REPOSITORY + "primaryType", REPOSITORY + "lastModifiedBy", REPOSITORY + "created",
-                REPOSITORY + "mixinTypes", REPOSITORY + "createdBy", REPOSITORY + "uuid", REPOSITORY + "hasContent",
-                "premis:hasSize", "premis:hasOriginalName", REPOSITORY + "digest"));
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final Set<EventType> eventTypes = newSet(RESOURCE_CREATION, RESOURCE_MODIFICATION);
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Binary");
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -222,10 +227,9 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileChanged() throws Exception {
-        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.PROPERTY_CHANGED));
-        final Set<String> eventProps = new HashSet<>(Arrays.asList(REPOSITORY + "lastModified",
-                REPOSITORY + "hasContent", "premis:hasSize", "premis:hasOriginalName", REPOSITORY + "digest"));
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final Set<EventType> eventTypes = singleton(RESOURCE_MODIFICATION);
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Binary");
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -235,9 +239,9 @@ public class InternalAuditorTest {
 
     @Test
     public void testFileRemoved() throws Exception {
-        final Set<EventType> eventTypes = new HashSet<>(Arrays.asList(EventType.NODE_REMOVED));
-        final Set<String> eventProps = new HashSet<>(Arrays.asList( REPOSITORY + "hasContent"));
-        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, eventProps);
+        final Set<EventType> eventTypes = singleton(RESOURCE_DELETION);
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Binary");
+        final FedoraEvent mockFedoraEvent = setupMockEvent(eventTypes, resourceTypes);
         when(mockContainerService.findOrCreate(any(Session.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
@@ -247,39 +251,48 @@ public class InternalAuditorTest {
 
     @Test
     public void testGetAuditEventTypeCreation() throws Exception {
-        final String eventType = REPOSITORY + "NODE_ADDED," + REPOSITORY + "PROPERTY_ADDED";
-        final String properties = REPOSITORY + "lastModified," + REPOSITORY + "primaryType," +
-                REPOSITORY + "lastModifiedBy," + REPOSITORY + "created," + REPOSITORY + "mixinTypes," +
-                REPOSITORY + "createdBy," + REPOSITORY + "uuid";
-        assertEquals(AuditUtils.getAuditEventType(eventType, properties), OBJECT_ADD);
+        final Set<String> eventTypes = newSet(RESOURCE_CREATION.getType(), RESOURCE_MODIFICATION.getType());
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Container");
+        assertEquals(AuditUtils.getAuditEventType(eventTypes, resourceTypes), OBJECT_ADD);
     }
 
     @Test
     public void testGetAuditEventTypeModification() throws Exception {
-        final String eventType = REPOSITORY + "PROPERTY_CHANGED";
-        final String properties = REPOSITORY + "lastModified," + REPOSITORY + "primaryType," +
-                REPOSITORY + "lastModifiedBy," + REPOSITORY + "created," + REPOSITORY + "mixinTypes," +
-                REPOSITORY + "createdBy," + REPOSITORY + "uuid";
-        assertEquals(AuditUtils.getAuditEventType(eventType, properties), METADATA_MOD);
+        final Set<String> eventTypes = newSet(RESOURCE_MODIFICATION.getType());
+        final Set<String> resourceTypes = newSet(REPOSITORY + "Resource", REPOSITORY + "Container");
+        assertEquals(AuditUtils.getAuditEventType(eventTypes, resourceTypes), METADATA_MOD);
     }
 
     @Test
     public void testGetAuditEventTypeRemoval() throws Exception {
-        final String eventType = REPOSITORY + "NODE_REMOVED";
-        final String properties = "";
-        assertEquals(AuditUtils.getAuditEventType(eventType, properties), OBJECT_REM);
+        final Set<String> eventTypes = newSet(RESOURCE_DELETION.getType());
+        final Set<String> resourceTypes = emptySet();
+        assertEquals(AuditUtils.getAuditEventType(eventTypes, resourceTypes), OBJECT_REM);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testGetEventPathInvalid() {
+        testTnternalAuditor.getEventPath(identifier);
+    }
+
+
+    @Test
+    public void testGetEventPath() {
+        final String path = testTnternalAuditor.getEventPath("urn:uuid:" + identifier);
+        assertEquals(identifierPath, path);
     }
 
 
     private static FedoraEvent setupMockEvent(final Set<EventType> eventTypes,
-                                           final Set<String> eventProperties) throws RepositoryException {
+                                           final Set<String> resourceTypes) throws RepositoryException {
         final FedoraEvent mockFedoraEvent = mock(FedoraEvent.class);
         when(mockFedoraEvent.getDate()).thenReturn(timestamp);
         when(mockFedoraEvent.getUserID()).thenReturn(userID);
-        when(mockFedoraEvent.getUserData()).thenReturn(userData);
+        when(mockFedoraEvent.getInfo()).thenReturn(auxInfo);
         when(mockFedoraEvent.getPath()).thenReturn("/non/audit/container/path");
+        when(mockFedoraEvent.getEventID()).thenReturn("urn:uuid:" + identifier);
         when(mockFedoraEvent.getTypes()).thenReturn(eventTypes);
-        when(mockFedoraEvent.getProperties()).thenReturn(eventProperties);
+        when(mockFedoraEvent.getResourceTypes()).thenReturn(resourceTypes);
         return mockFedoraEvent;
     }
 }

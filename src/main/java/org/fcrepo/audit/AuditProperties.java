@@ -20,6 +20,7 @@ import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
+import static org.fcrepo.kernel.api.RdfLexicon.EVENT_NAMESPACE;
 import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
 
 
@@ -47,12 +48,10 @@ public final class AuditProperties {
 
     public static final String RDF_TYPE = RDF_NAMESPACE + "type";
 
-    public static final String HAS_CONTENT = REPOSITORY + "hasContent";
-    public static final String LAST_MODIFIED = REPOSITORY + "lastModified";
-    public static final String LAST_MODIFIED_BY = REPOSITORY + "lastModifiedBy";
-    public static final String NODE_ADDED = REPOSITORY + "NODE_ADDED";
-    public static final String NODE_REMOVED = REPOSITORY + "NODE_REMOVED";
-    public static final String PROPERTY_CHANGED = REPOSITORY + "PROPERTY_CHANGED";
+    public static final String BINARY_TYPE = REPOSITORY + "Binary";
+    public static final String RESOURCE_CREATION = EVENT_NAMESPACE + "ResourceCreation";
+    public static final String RESOURCE_DELETION = EVENT_NAMESPACE + "ResourceDeletion";
+    public static final String RESOURCE_MODIFICATION = EVENT_NAMESPACE + "ResourceModification";
 
     private AuditProperties() {
         // prevent instantiation

@@ -15,15 +15,13 @@
  */
 package org.fcrepo.audit;
 
+import static org.fcrepo.audit.AuditProperties.BINARY_TYPE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.fcrepo.kernel.api.observer.EventType;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 
 import org.slf4j.Logger;
 
@@ -37,19 +35,13 @@ public class AuditUtils {
     private static final Logger LOGGER = getLogger(AuditUtils.class);
 
     /**
-     * Returns the comma event types string for the integer event types.
+     * Returns the set of event type URIs for the integer event types.
      *
      * @param types to be converted to URIs
-     * @return comma-delimited string of type URIs
+     * @return set of type URIs
      */
-    public static String getEventURIs(final Set<EventType> types) {
-        final String uris = Joiner.on(',').join(Iterables.transform(types, new Function<EventType, String>() {
-
-            @Override
-            public String apply(final EventType type) {
-                return AuditNamespaces.REPOSITORY + type;
-            }
-        }));
+    public static Set<String> getEventURIs(final Set<EventType> types) {
+        final Set<String> uris = types.stream().map(EventType::getType).collect(Collectors.toSet());
         LOGGER.debug("Constructed event type URIs: {}", uris);
         return uris;
     }
@@ -57,26 +49,26 @@ public class AuditUtils {
     /**
      * Returns the Audit event type based on fedora event type and properties.
      *
-     * @param eventType from Fedora
-     * @param properties associated with the Fedora event
+     * @param eventTypes from Fedora
+     * @param resourceTypes associated with the object of the Fedora event
      * @return Audit event
      */
-    public static String getAuditEventType(final String eventType, final String properties) {
-        // mapping event type/properties to audit event type
-        if (eventType.contains(AuditProperties.NODE_ADDED)) {
-            if (properties != null && properties.contains(AuditProperties.HAS_CONTENT)) {
+    public static String getAuditEventType(final Set<String> eventTypes, final Set<String> resourceTypes) {
+        // mapping event type / resource types to audit event type
+        if (eventTypes.contains(AuditProperties.RESOURCE_CREATION)) {
+            if (resourceTypes != null && resourceTypes.contains(BINARY_TYPE)) {
                 return AuditProperties.CONTENT_ADD;
             } else {
                 return AuditProperties.OBJECT_ADD;
             }
-        } else if (eventType.contains(AuditProperties.NODE_REMOVED)) {
-            if (properties != null && properties.contains(AuditProperties.HAS_CONTENT)) {
+        } else if (eventTypes.contains(AuditProperties.RESOURCE_DELETION)) {
+            if (resourceTypes != null && resourceTypes.contains(BINARY_TYPE)) {
                 return AuditProperties.CONTENT_REM;
             } else {
                 return AuditProperties.OBJECT_REM;
             }
-        } else if (eventType.contains(AuditProperties.PROPERTY_CHANGED)) {
-            if (properties != null && properties.contains(AuditProperties.HAS_CONTENT)) {
+        } else if (eventTypes.contains(AuditProperties.RESOURCE_MODIFICATION)) {
+            if (resourceTypes != null && resourceTypes.contains(BINARY_TYPE)) {
                 return AuditProperties.CONTENT_MOD;
             } else {
                 return AuditProperties.METADATA_MOD;

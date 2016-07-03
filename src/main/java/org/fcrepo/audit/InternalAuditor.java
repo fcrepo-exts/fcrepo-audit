@@ -22,8 +22,9 @@ import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static java.util.EnumSet.noneOf;
+import static org.fcrepo.kernel.api.observer.OptionalValues.BASE_URL;
+import static org.fcrepo.kernel.api.observer.OptionalValues.USER_AGENT;
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.getJcrNode;
-import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import static org.fcrepo.audit.AuditProperties.INTERNAL_EVENT;
@@ -39,7 +40,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.util.Set;
 import java.util.TimeZone;
 
 import javax.annotation.PostConstruct;
@@ -54,6 +56,7 @@ import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
 import org.fcrepo.kernel.api.models.FedoraResource;
 import org.fcrepo.kernel.api.observer.FedoraEvent;
 import org.fcrepo.kernel.api.services.ContainerService;
+import org.fcrepo.kernel.api.services.functions.HierarchicalIdentifierSupplier;
 import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
 
 import org.modeshape.jcr.api.JcrTools;
@@ -61,15 +64,12 @@ import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -99,6 +99,8 @@ public class InternalAuditor implements Auditor {
     @Inject
     private ContainerService containerService;
 
+    private static final DefaultPathMinter pathMinter = new DefaultPathMinter();
+
     private Session session;
     private static JcrTools jcrTools = new JcrTools(true);
 
@@ -110,7 +112,7 @@ public class InternalAuditor implements Auditor {
         try {
             AUDIT_CONTAINER_LOCATION = System.getProperty(AUDIT_CONTAINER);
             if (AUDIT_CONTAINER_LOCATION != null) {
-                LOGGER.info("Initializing: {}", this.getClass().getCanonicalName());
+                LOGGER.info("Initializing: {}, {}", this.getClass().getCanonicalName(), AUDIT_CONTAINER_LOCATION);
                 eventBus.register(this);
                 if (!AUDIT_CONTAINER_LOCATION.startsWith("/")) {
                     AUDIT_CONTAINER_LOCATION = "/" + AUDIT_CONTAINER_LOCATION;
@@ -144,7 +146,7 @@ public class InternalAuditor implements Auditor {
     @Subscribe
     public void recordEvent(final FedoraEvent event) {
         LOGGER.debug("Event detected: {} {}", event.getUserID(), event.getPath());
-        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION)) {
+        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION) && !event.getPath().isEmpty()) {
             try {
                 createAuditNode(event);
             } catch (IOException e) {
@@ -173,34 +175,27 @@ public class InternalAuditor implements Auditor {
      */
     public void createAuditNode(final FedoraEvent event) throws IOException {
         try {
-            final String userData = event.getUserData();
-            final ObjectMapper mapper = new ObjectMapper();
-            final JsonNode json = mapper.readTree(userData);
-            final String userAgent = json.get("userAgent").asText();
-            String baseURL = json.get("baseURL").asText();
-            if (baseURL.endsWith("/")) {
-                baseURL = baseURL.substring(0, baseURL.length() - 1);
-            }
-            String path = event.getPath();
-            if ( path.endsWith("/" + JCR_CONTENT) ) {
-                path = path.replaceAll("/" + JCR_CONTENT,"");
-            }
+            final String userAgent = event.getInfo().get(USER_AGENT);
+            final String baseURL = event.getInfo().get(BASE_URL);
+            final String path = event.getPath();
             final String uri = baseURL + path;
-            final Long timestamp =  event.getDate();
+            final Instant timestamp =  event.getDate();
             final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
-            final String eventDate = df.format(new Date(timestamp));
+            final String eventDate = df.format(timestamp.toEpochMilli());
             final String userID = event.getUserID();
-            final String eventType = AuditUtils.getEventURIs(event.getTypes());
-            final String properties = Joiner.on(',').join(event.getProperties());
-            final String auditEventType = AuditUtils.getAuditEventType(eventType, properties);
+            final Set<String> eventTypes = AuditUtils.getEventURIs(event.getTypes());
+            final Set<String> resourceTypes = event.getResourceTypes();
+            final String auditEventType = AuditUtils.getAuditEventType(eventTypes, resourceTypes);
+
+            final String eventPath = getEventPath(event.getEventID());
             final FedoraResource auditResource = containerService.findOrCreate(session,
-                    AUDIT_CONTAINER_LOCATION + "/" + event.getEventID());
+                    AUDIT_CONTAINER_LOCATION + "/" + eventPath);
 
             LOGGER.debug("Audit node {} created for event.", event.getEventID());
 
             final Model m = createDefaultModel();
-            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + event.getEventID();
+            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + "/" + eventPath;
             final Resource s = createResource(auditResourceURI);
             m.add(createStatement(s, RDF_TYPE, createResource(INTERNAL_EVENT)));
             m.add(createStatement(s, RDF_TYPE, createResource(PREMIS_EVENT)));
@@ -231,7 +226,18 @@ public class InternalAuditor implements Auditor {
     }
 
     @VisibleForTesting
+    protected String getEventPath(final String eventID) {
+        if (!eventID.startsWith("urn:uuid:")) {
+            throw new IllegalArgumentException("Event ID must be a 'urn:uuid:'" + eventID);
+        }
+        return pathMinter.get(eventID.substring("urn:uuid:".length()));
+    }
+
+    @VisibleForTesting
     protected Statement createStatement(final Resource subject, final String property, final RDFNode object) {
         return ResourceFactory.createStatement(subject, createProperty(property), object);
     }
+
+    private static class DefaultPathMinter implements HierarchicalIdentifierSupplier { }
+
 }
