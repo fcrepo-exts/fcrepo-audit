@@ -17,10 +17,10 @@
  */
 package org.fcrepo.audit;
 
-import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
-import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDstring;
-import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
-import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDstring;
+import static org.apache.jena.rdf.model.ResourceFactory.createResource;
+import static org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
@@ -71,7 +71,7 @@ import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 
 import com.google.common.eventbus.EventBus;
-import com.hp.hpl.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Resource;
 
 /**
  * @author mohideen
