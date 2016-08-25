@@ -17,12 +17,12 @@
  */
 package org.fcrepo.audit;
 
-import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
-import static com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDstring;
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
-import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
-import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
-import static com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral;
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDstring;
+import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.apache.jena.rdf.model.ResourceFactory.createProperty;
+import static org.apache.jena.rdf.model.ResourceFactory.createResource;
+import static org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static java.util.EnumSet.noneOf;
 import static org.fcrepo.kernel.api.observer.OptionalValues.BASE_URL;
 import static org.fcrepo.kernel.api.observer.OptionalValues.USER_AGENT;
@@ -65,11 +65,11 @@ import org.modeshape.jcr.api.Repository;
 import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
 
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
