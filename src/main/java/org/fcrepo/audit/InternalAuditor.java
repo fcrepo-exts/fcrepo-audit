@@ -26,6 +26,7 @@ import static org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral;
 import static java.util.EnumSet.noneOf;
 import static org.fcrepo.kernel.api.observer.OptionalValues.BASE_URL;
 import static org.fcrepo.kernel.api.observer.OptionalValues.USER_AGENT;
+import static org.fcrepo.kernel.modeshape.FedoraSessionImpl.getJcrSession;
 import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.getJcrNode;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -52,6 +53,8 @@ import javax.inject.Inject;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.fcrepo.kernel.api.FedoraRepository;
+import org.fcrepo.kernel.api.FedoraSession;
 import org.fcrepo.kernel.api.RequiredRdfContext;
 import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
 import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
@@ -61,8 +64,6 @@ import org.fcrepo.kernel.api.services.ContainerService;
 import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
 
 import org.modeshape.jcr.api.JcrTools;
-import org.modeshape.jcr.api.Repository;
-import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
 
 import org.apache.jena.rdf.model.Model;
@@ -95,14 +96,14 @@ public class InternalAuditor implements Auditor {
     private EventBus eventBus;
 
     @Inject
-    private Repository repository;
+    private FedoraRepository repository;
 
     @Inject
     private ContainerService containerService;
 
     private static final UuidPathMinter pathMinter = new UuidPathMinter();
 
-    private Session session;
+    private FedoraSession session;
     private static JcrTools jcrTools = new JcrTools(true);
 
     /**
@@ -110,31 +111,27 @@ public class InternalAuditor implements Auditor {
      */
     @PostConstruct
     public void register() {
-        try {
-            AUDIT_CONTAINER_LOCATION = System.getProperty(AUDIT_CONTAINER);
-            if (AUDIT_CONTAINER_LOCATION != null) {
-                LOGGER.info("Initializing: {}, {}", this.getClass().getCanonicalName(), AUDIT_CONTAINER_LOCATION);
-                eventBus.register(this);
-                if (!AUDIT_CONTAINER_LOCATION.startsWith("/")) {
-                    AUDIT_CONTAINER_LOCATION = "/" + AUDIT_CONTAINER_LOCATION;
-                }
-                if (AUDIT_CONTAINER_LOCATION.endsWith("/")) {
-                    AUDIT_CONTAINER_LOCATION = AUDIT_CONTAINER_LOCATION.substring(0,
-                            AUDIT_CONTAINER_LOCATION.length() - 2);
-                }
-                session = repository.login();
-                containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION);
-
-                LOGGER.debug("Registering audit CND");
-                jcrTools.registerNodeTypes(session, "audit.cnd");
-
-                session.save();
-            } else {
-                LOGGER.warn("Cannot Initialize: {}", this.getClass().getCanonicalName());
-                LOGGER.warn("System property not found: " + AUDIT_CONTAINER);
+        AUDIT_CONTAINER_LOCATION = System.getProperty(AUDIT_CONTAINER);
+        if (AUDIT_CONTAINER_LOCATION != null) {
+            LOGGER.info("Initializing: {}, {}", this.getClass().getCanonicalName(), AUDIT_CONTAINER_LOCATION);
+            eventBus.register(this);
+            if (!AUDIT_CONTAINER_LOCATION.startsWith("/")) {
+                AUDIT_CONTAINER_LOCATION = "/" + AUDIT_CONTAINER_LOCATION;
             }
-        } catch (RepositoryException e) {
-            throw new RepositoryRuntimeException(e);
+            if (AUDIT_CONTAINER_LOCATION.endsWith("/")) {
+                AUDIT_CONTAINER_LOCATION = AUDIT_CONTAINER_LOCATION.substring(0,
+                        AUDIT_CONTAINER_LOCATION.length() - 2);
+            }
+            session = repository.login();
+            containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION);
+
+            LOGGER.debug("Registering audit CND");
+            jcrTools.registerNodeTypes(getJcrSession(session), "audit.cnd");
+
+            session.commit();
+        } else {
+            LOGGER.warn("Cannot Initialize: {}", this.getClass().getCanonicalName());
+            LOGGER.warn("System property not found: " + AUDIT_CONTAINER);
         }
     }
 
@@ -209,7 +206,7 @@ public class InternalAuditor implements Auditor {
             }
 
             final IdentifierConverter<Resource, FedoraResource> translator =
-                new PrefixingIdentifierTranslator(session, baseURL + "/");
+                new PrefixingIdentifierTranslator(getJcrSession(session), baseURL + "/");
             auditResource.replaceProperties(translator, m,
                     auditResource.getTriples(translator, noneOf(RequiredRdfContext.class)));
 
@@ -220,7 +217,7 @@ public class InternalAuditor implements Auditor {
                 LOGGER.warn("Error creating URI for repository resource {}", uri);
             }
 
-            session.save();
+            session.commit();
         } catch (RepositoryException e) {
             throw new RepositoryRuntimeException(e);
         }
