@@ -17,14 +17,13 @@
  */
 package org.fcrepo.audit;
 
+import static org.apache.jena.vocabulary.RDF.type;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
 import static org.fcrepo.kernel.api.RdfLexicon.EVENT_NAMESPACE;
-import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
-
 
 /**
  * @author acoburn
@@ -48,7 +47,7 @@ public final class AuditProperties {
     public static final String PREMIS_AGENT = PREMIS + "hasEventRelatedAgent";
     public static final String PREMIS_TYPE = PREMIS + "hasEventType";
 
-    public static final String RDF_TYPE = RDF_NAMESPACE + "type";
+    public static final String RDF_TYPE = type.getURI();
 
     public static final String BINARY_TYPE = REPOSITORY + "Binary";
     public static final String RESOURCE_CREATION = EVENT_NAMESPACE + "ResourceCreation";
