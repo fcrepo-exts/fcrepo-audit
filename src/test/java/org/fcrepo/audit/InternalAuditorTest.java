@@ -28,7 +28,7 @@ import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
-import static org.fcrepo.kernel.api.RdfLexicon.RDF_NAMESPACE;
+import static org.fcrepo.audit.AuditProperties.RDF_TYPE;
 import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_CREATION;
 import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_DELETION;
 import static org.fcrepo.kernel.api.observer.EventType.RESOURCE_MODIFICATION;
@@ -173,11 +173,11 @@ public class InternalAuditorTest {
         when(mockContainerService.findOrCreate(any(FedoraSession.class), anyString())).thenReturn(mockContainer);
         when(mockContainer.getNode()).thenReturn(mockNode);
         testTnternalAuditor.recordEvent(mockFedoraEvent);
-        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_TYPE),
                 eq(createResource(AUDIT + "InternalEvent")));
-        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_TYPE),
                 eq(createResource(PREMIS + "Event")));
-        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_NAMESPACE + "type"),
+        verify(testTnternalAuditor).createStatement(any(Resource.class), eq(RDF_TYPE),
                 eq(createResource(PROV + "InstantaneousEvent")));
         verify(testTnternalAuditor).createStatement(any(Resource.class), eq(PREMIS + "hasEventDateTime"),
                 eq(createTypedLiteral("2015-04-10T14:30:36Z", XSDdateTime)));
