@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.8.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>fcrepo-audit</artifactId>
@@ -68,17 +68,17 @@
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel-api</artifactId>
-      <version>4.8.0-SNAPSHOT</version>
+      <version>5.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel-modeshape</artifactId>
-      <version>4.8.0-SNAPSHOT</version>
+      <version>5.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-mint</artifactId>
-      <version>4.8.0-SNAPSHOT</version>
+      <version>5.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.modeshape</groupId>
