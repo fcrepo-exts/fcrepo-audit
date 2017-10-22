@@ -17,13 +17,14 @@
  */
 package org.fcrepo.audit;
 
+import org.fcrepo.kernel.api.observer.EventType;
+
 import static org.apache.jena.vocabulary.RDF.type;
 import static org.fcrepo.audit.AuditNamespaces.REPOSITORY;
 import static org.fcrepo.audit.AuditNamespaces.AUDIT;
 import static org.fcrepo.audit.AuditNamespaces.PREMIS;
 import static org.fcrepo.audit.AuditNamespaces.PROV;
 import static org.fcrepo.audit.AuditNamespaces.EVENT_TYPE;
-import static org.fcrepo.kernel.api.RdfLexicon.EVENT_NAMESPACE;
 
 /**
  * @author acoburn
@@ -50,9 +51,9 @@ public final class AuditProperties {
     public static final String RDF_TYPE = type.getURI();
 
     public static final String BINARY_TYPE = REPOSITORY + "Binary";
-    public static final String RESOURCE_CREATION = EVENT_NAMESPACE + "ResourceCreation";
-    public static final String RESOURCE_DELETION = EVENT_NAMESPACE + "ResourceDeletion";
-    public static final String RESOURCE_MODIFICATION = EVENT_NAMESPACE + "ResourceModification";
+    public static final String RESOURCE_CREATION = EventType.RESOURCE_CREATION.getType();
+    public static final String RESOURCE_DELETION = EventType.RESOURCE_DELETION.getType();
+    public static final String RESOURCE_MODIFICATION = EventType.RESOURCE_MODIFICATION.getType();
 
     private AuditProperties() {
         // prevent instantiation
