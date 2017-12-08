@@ -26,6 +26,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Edwin Shin
  */
+@Deprecated
 public interface Auditor {
 
     /**
