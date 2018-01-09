@@ -74,7 +74,6 @@ import org.apache.jena.rdf.model.Statement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import sun.util.locale.provider.LocaleServiceProviderPool;
 
 /**
  * Auditor implementation that creates audit nodes in the repository.
