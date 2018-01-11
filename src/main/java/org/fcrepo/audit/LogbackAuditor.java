@@ -35,6 +35,7 @@ import com.google.common.eventbus.Subscribe;
  * @author Edwin Shin
  * @since 2014
  */
+@Deprecated
 public class LogbackAuditor implements Auditor {
 
     /**
@@ -52,6 +53,7 @@ public class LogbackAuditor implements Auditor {
     public void register() {
         LOGGER.debug("Initializing: {}", this.getClass().getCanonicalName());
         eventBus.register(this);
+        LOGGER.warn("The fcrepo-audit extension is now deprecated and will no longer be supported in Fedora 5.x.");
     }
 
     @Override

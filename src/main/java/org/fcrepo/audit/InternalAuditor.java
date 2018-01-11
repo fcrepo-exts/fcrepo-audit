@@ -81,6 +81,7 @@ import com.google.common.eventbus.Subscribe;
  * @author escowles
  * @since 2015-04-15
  */
+@Deprecated
 public class InternalAuditor implements Auditor {
 
     /**
@@ -133,6 +134,8 @@ public class InternalAuditor implements Auditor {
             LOGGER.warn("Cannot Initialize: {}", this.getClass().getCanonicalName());
             LOGGER.warn("System property not found: " + AUDIT_CONTAINER);
         }
+
+        LOGGER.warn("The fcrepo-audit extension is now deprecated and will no longer be supported in Fedora 5.x.");
     }
 
     /**
