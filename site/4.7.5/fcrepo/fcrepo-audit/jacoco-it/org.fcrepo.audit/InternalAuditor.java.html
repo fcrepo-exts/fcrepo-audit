@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>InternalAuditor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fedora Repository Audit Module</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.audit</a> &gt; <span class="el_source">InternalAuditor.java</span></div><h1>InternalAuditor.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the &quot;License&quot;); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.audit;
+
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDdateTime;
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDstring;
+import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.apache.jena.rdf.model.ResourceFactory.createProperty;
+import static org.apache.jena.rdf.model.ResourceFactory.createResource;
+import static org.apache.jena.rdf.model.ResourceFactory.createTypedLiteral;
+import static java.util.EnumSet.noneOf;
+import static org.fcrepo.kernel.api.observer.OptionalValues.BASE_URL;
+import static org.fcrepo.kernel.api.observer.OptionalValues.USER_AGENT;
+import static org.fcrepo.kernel.modeshape.FedoraSessionImpl.getJcrSession;
+import static org.fcrepo.kernel.modeshape.utils.FedoraTypesUtils.getJcrNode;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import static org.fcrepo.audit.AuditProperties.INTERNAL_EVENT;
+import static org.fcrepo.audit.AuditProperties.PREMIS_AGENT;
+import static org.fcrepo.audit.AuditProperties.PREMIS_EVENT;
+import static org.fcrepo.audit.AuditProperties.PREMIS_TIME;
+import static org.fcrepo.audit.AuditProperties.PREMIS_TYPE;
+import static org.fcrepo.audit.AuditProperties.PROV_EVENT;
+import static org.fcrepo.audit.AuditProperties.RDF_TYPE;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.fcrepo.kernel.api.FedoraRepository;
+import org.fcrepo.kernel.api.FedoraSession;
+import org.fcrepo.kernel.api.RequiredRdfContext;
+import org.fcrepo.kernel.api.exception.RepositoryRuntimeException;
+import org.fcrepo.kernel.api.identifiers.IdentifierConverter;
+import org.fcrepo.kernel.api.models.FedoraResource;
+import org.fcrepo.kernel.api.observer.FedoraEvent;
+import org.fcrepo.kernel.api.services.ContainerService;
+import org.fcrepo.kernel.modeshape.rdf.impl.PrefixingIdentifierTranslator;
+
+import org.modeshape.jcr.api.JcrTools;
+import org.slf4j.Logger;
+
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+
+/**
+ * Auditor implementation that creates audit nodes in the repository.
+ * @author mohideen
+ * @author escowles
+ * @since 2015-04-15
+ */
+@Deprecated
+<span class="fc" id="L85">public class InternalAuditor implements Auditor {</span>
+
+    /**
+     * Logger for this class.
+     */
+<span class="fc" id="L90">    private static final Logger LOGGER = getLogger(InternalAuditor.class);</span>
+
+    private static final String AUDIT_CONTAINER = &quot;fcrepo.audit.container&quot;;
+
+    private static String AUDIT_CONTAINER_LOCATION;
+
+    @Inject
+    private EventBus eventBus;
+
+    @Inject
+    private FedoraRepository repository;
+
+    @Inject
+    private ContainerService containerService;
+
+<span class="fc" id="L105">    private static final UuidPathMinter pathMinter = new UuidPathMinter();</span>
+
+    private FedoraSession session;
+<span class="fc" id="L108">    private static JcrTools jcrTools = new JcrTools(true);</span>
+
+    /**
+     * Register with the EventBus to receive events.
+     */
+    @PostConstruct
+    public void register() {
+<span class="fc" id="L115">        AUDIT_CONTAINER_LOCATION = System.getProperty(AUDIT_CONTAINER);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (AUDIT_CONTAINER_LOCATION != null) {</span>
+<span class="fc" id="L117">            LOGGER.info(&quot;Initializing: {}, {}&quot;, this.getClass().getCanonicalName(), AUDIT_CONTAINER_LOCATION);</span>
+<span class="fc" id="L118">            eventBus.register(this);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (!AUDIT_CONTAINER_LOCATION.startsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L120">                AUDIT_CONTAINER_LOCATION = &quot;/&quot; + AUDIT_CONTAINER_LOCATION;</span>
+            }
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if (AUDIT_CONTAINER_LOCATION.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L123">                AUDIT_CONTAINER_LOCATION = AUDIT_CONTAINER_LOCATION.substring(0,</span>
+<span class="nc" id="L124">                        AUDIT_CONTAINER_LOCATION.length() - 2);</span>
+            }
+<span class="fc" id="L126">            session = repository.login();</span>
+<span class="fc" id="L127">            containerService.findOrCreate(session, AUDIT_CONTAINER_LOCATION);</span>
+
+<span class="fc" id="L129">            LOGGER.debug(&quot;Registering audit CND&quot;);</span>
+<span class="fc" id="L130">            jcrTools.registerNodeTypes(getJcrSession(session), &quot;audit.cnd&quot;);</span>
+
+<span class="fc" id="L132">            session.commit();</span>
+        } else {
+<span class="nc" id="L134">            LOGGER.warn(&quot;Cannot Initialize: {}&quot;, this.getClass().getCanonicalName());</span>
+<span class="nc" id="L135">            LOGGER.warn(&quot;System property not found: &quot; + AUDIT_CONTAINER);</span>
+        }
+
+<span class="fc" id="L138">        LOGGER.warn(&quot;The fcrepo-audit extension is now deprecated and will no longer be supported in Fedora 5.x.&quot;);</span>
+<span class="fc" id="L139">    }</span>
+
+    /**
+     * Fedora internal events are received and processed by this method.
+     *
+     * @param event
+     *        The {@link FedoraEvent} to record.
+     */
+    @Subscribe
+    public void recordEvent(final FedoraEvent event) {
+<span class="fc" id="L149">        LOGGER.debug(&quot;Event detected: {} {}&quot;, event.getUserID(), event.getPath());</span>
+<span class="fc bfc" id="L150" title="All 4 branches covered.">        if (!event.getPath().startsWith(AUDIT_CONTAINER_LOCATION) &amp;&amp; !event.getPath().isEmpty()) {</span>
+            try {
+<span class="fc" id="L152">                createAuditNode(event);</span>
+<span class="nc" id="L153">            } catch (IOException e) {</span>
+<span class="nc" id="L154">                throw new RepositoryRuntimeException(e);</span>
+<span class="fc" id="L155">            }</span>
+        }
+<span class="fc" id="L157">    }</span>
+
+    /**
+     * Close external connections
+     */
+    @PreDestroy
+    public void releaseConnections() {
+<span class="nc" id="L164">        LOGGER.debug(&quot;Tearing down: {}&quot;, this.getClass().getCanonicalName());</span>
+<span class="nc" id="L165">        eventBus.unregister(this);</span>
+<span class="nc" id="L166">    }</span>
+
+    // JCR property name, not URI
+    private static final String PREMIS_OBJ = &quot;premis:hasEventRelatedObject&quot;;
+
+    /**
+     * Creates a node for the audit event under the configured container.
+     *
+     * @param event to be persisted in the repository
+     * @throws java.io.IOException on json mapping error
+     */
+    public void createAuditNode(final FedoraEvent event) throws IOException {
+        try {
+<span class="fc" id="L179">            final String userAgent = event.getInfo().get(USER_AGENT);</span>
+<span class="fc" id="L180">            final String baseURL = event.getInfo().get(BASE_URL);</span>
+<span class="fc" id="L181">            final String path = event.getPath();</span>
+<span class="fc" id="L182">            final String uri = baseURL + path;</span>
+<span class="fc" id="L183">            final Instant timestamp =  event.getDate();</span>
+<span class="fc" id="L184">            final DateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;);</span>
+<span class="fc" id="L185">            df.setTimeZone(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="fc" id="L186">            final String eventDate = df.format(timestamp.toEpochMilli());</span>
+<span class="fc" id="L187">            final String userID = event.getUserID();</span>
+<span class="fc" id="L188">            final Set&lt;String&gt; eventTypes = AuditUtils.getEventURIs(event.getTypes());</span>
+<span class="fc" id="L189">            final Set&lt;String&gt; resourceTypes = event.getResourceTypes();</span>
+<span class="fc" id="L190">            final String auditEventType = AuditUtils.getAuditEventType(eventTypes, resourceTypes);</span>
+
+<span class="fc" id="L192">            final String eventPath = getEventPath(event.getEventID());</span>
+<span class="fc" id="L193">            final FedoraResource auditResource = containerService.findOrCreate(session,</span>
+                    AUDIT_CONTAINER_LOCATION + &quot;/&quot; + eventPath);
+
+<span class="fc" id="L196">            LOGGER.debug(&quot;Audit node {} created for event.&quot;, event.getEventID());</span>
+
+<span class="fc" id="L198">            final Model m = createDefaultModel();</span>
+<span class="fc" id="L199">            final String auditResourceURI = baseURL + AUDIT_CONTAINER_LOCATION + &quot;/&quot; + eventPath;</span>
+<span class="fc" id="L200">            final Resource s = createResource(auditResourceURI);</span>
+<span class="fc" id="L201">            m.add(createStatement(s, RDF_TYPE, createResource(INTERNAL_EVENT)));</span>
+<span class="fc" id="L202">            m.add(createStatement(s, RDF_TYPE, createResource(PREMIS_EVENT)));</span>
+<span class="fc" id="L203">            m.add(createStatement(s, RDF_TYPE, createResource(PROV_EVENT)));</span>
+<span class="fc" id="L204">            m.add(createStatement(s, PREMIS_TIME, createTypedLiteral(eventDate, XSDdateTime)));</span>
+<span class="fc" id="L205">            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userID, XSDstring)));</span>
+<span class="fc" id="L206">            m.add(createStatement(s, PREMIS_AGENT, createTypedLiteral(userAgent, XSDstring)));</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">            if (auditEventType != null) {</span>
+<span class="fc" id="L208">                m.add(createStatement(s, PREMIS_TYPE, createResource(auditEventType)));</span>
+            }
+
+<span class="fc" id="L211">            final IdentifierConverter&lt;Resource, FedoraResource&gt; translator =</span>
+<span class="fc" id="L212">                new PrefixingIdentifierTranslator(getJcrSession(session), baseURL + &quot;/&quot;);</span>
+<span class="fc" id="L213">            auditResource.replaceProperties(translator, m,</span>
+<span class="fc" id="L214">                    auditResource.getTriples(translator, noneOf(RequiredRdfContext.class)));</span>
+
+            // set link to impacted object using a URI property to preserve the link if it's deleted
+            try {
+<span class="fc" id="L218">                getJcrNode(auditResource).setProperty(PREMIS_OBJ, new URI(uri).toString(), PropertyType.URI);</span>
+<span class="nc" id="L219">            } catch (URISyntaxException e) {</span>
+<span class="nc" id="L220">                LOGGER.warn(&quot;Error creating URI for repository resource {}&quot;, uri);</span>
+<span class="fc" id="L221">            }</span>
+
+<span class="fc" id="L223">            session.commit();</span>
+<span class="nc" id="L224">        } catch (RepositoryException e) {</span>
+<span class="nc" id="L225">            throw new RepositoryRuntimeException(e);</span>
+<span class="fc" id="L226">        }</span>
+<span class="fc" id="L227">    }</span>
+
+    @VisibleForTesting
+    protected String getEventPath(final String eventID) {
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if (!eventID.startsWith(&quot;urn:uuid:&quot;)) {</span>
+<span class="nc" id="L232">            throw new IllegalArgumentException(&quot;Event ID must be a 'urn:uuid:'&quot; + eventID);</span>
+        }
+<span class="fc" id="L234">        return pathMinter.get(eventID.substring(&quot;urn:uuid:&quot;.length()));</span>
+    }
+
+    @VisibleForTesting
+    protected Statement createStatement(final Resource subject, final String property, final RDFNode object) {
+<span class="fc" id="L239">        return ResourceFactory.createStatement(subject, createProperty(property), object);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

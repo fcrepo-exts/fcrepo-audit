@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AuditUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fedora Repository Audit Module</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.audit</a> &gt; <span class="el_source">AuditUtils.java</span></div><h1>AuditUtils.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the &quot;License&quot;); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.audit;
+
+import static org.fcrepo.audit.AuditProperties.BINARY_TYPE;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.fcrepo.kernel.api.observer.EventType;
+
+import org.slf4j.Logger;
+
+/**
+ * Audit utility functions
+ * @author acoburn
+ * @since 2015-04-25
+ */
+public class AuditUtils {
+
+<span class="fc" id="L37">    private static final Logger LOGGER = getLogger(AuditUtils.class);</span>
+
+    /**
+     * Returns the set of event type URIs for the integer event types.
+     *
+     * @param types to be converted to URIs
+     * @return set of type URIs
+     */
+    public static Set&lt;String&gt; getEventURIs(final Set&lt;EventType&gt; types) {
+<span class="fc" id="L46">        final Set&lt;String&gt; uris = types.stream().map(EventType::getType).collect(Collectors.toSet());</span>
+<span class="fc" id="L47">        LOGGER.debug(&quot;Constructed event type URIs: {}&quot;, uris);</span>
+<span class="fc" id="L48">        return uris;</span>
+    }
+
+    /**
+     * Returns the Audit event type based on fedora event type and properties.
+     *
+     * @param eventTypes from Fedora
+     * @param resourceTypes associated with the object of the Fedora event
+     * @return Audit event
+     */
+    public static String getAuditEventType(final Set&lt;String&gt; eventTypes, final Set&lt;String&gt; resourceTypes) {
+        // mapping event type / resource types to audit event type
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (eventTypes.contains(AuditProperties.RESOURCE_CREATION)) {</span>
+<span class="pc bpc" id="L61" title="2 of 4 branches missed.">            if (resourceTypes != null &amp;&amp; resourceTypes.contains(BINARY_TYPE)) {</span>
+<span class="nc" id="L62">                return AuditProperties.CONTENT_ADD;</span>
+            } else {
+<span class="fc" id="L64">                return AuditProperties.OBJECT_ADD;</span>
+            }
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        } else if (eventTypes.contains(AuditProperties.RESOURCE_DELETION)) {</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">            if (resourceTypes != null &amp;&amp; resourceTypes.contains(BINARY_TYPE)) {</span>
+<span class="nc" id="L68">                return AuditProperties.CONTENT_REM;</span>
+            } else {
+<span class="nc" id="L70">                return AuditProperties.OBJECT_REM;</span>
+            }
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } else if (eventTypes.contains(AuditProperties.RESOURCE_MODIFICATION)) {</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">            if (resourceTypes != null &amp;&amp; resourceTypes.contains(BINARY_TYPE)) {</span>
+<span class="nc" id="L74">                return AuditProperties.CONTENT_MOD;</span>
+            } else {
+<span class="nc" id="L76">                return AuditProperties.METADATA_MOD;</span>
+            }
+        }
+<span class="nc" id="L79">        return null;</span>
+    }
+
+<span class="nc" id="L82">    private AuditUtils() {</span>
+        // prevent instantiation
+<span class="nc" id="L84">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
