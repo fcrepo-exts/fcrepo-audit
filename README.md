@@ -10,7 +10,7 @@ It is compatible with the Fedora 4.7.x series and will be archived when the 4.7.
 ---
 
 
-[![Build Status](https://travis-ci.org/fcrepo4-exts/fcrepo-audit.png?branch=master)](https://travis-ci.org/fcrepo4-exts/fcrepo-audit)
+[![Build Status](https://travis-ci.org/fcrepo-exts/fcrepo-audit.png?branch=master)](https://travis-ci.org/fcrepo-exts/fcrepo-audit)
 
 
-Provides audit functionality for the Fedora Commons repository framework. The [fcrepo-webapp-plus](https://github.com/fcrepo4-exts/fcrepo-webapp-plus) project provides a convenient option to build fcrepo-webapp packaged with fcrepo-audit module.
+Provides audit functionality for the Fedora Commons repository framework. The [fcrepo-webapp-plus](https://github.com/fcrepo-exts/fcrepo-webapp-plus) project provides a convenient option to build fcrepo-webapp packaged with fcrepo-audit module.
