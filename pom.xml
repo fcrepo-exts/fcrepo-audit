@@ -29,8 +29,8 @@
 
   <properties>
     <!-- Use ${project_name} instead of ${project.artifactId} to avoid incorrect
-      replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
-    <project_name>fcrepo4-audit</project_name>
+      replacements of "fcrepo" in child modules (for scm, site-distribution, etc -->
+    <project_name>fcrepo-audit</project_name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.copyrightYear>2015</project.copyrightYear>
@@ -44,11 +44,11 @@
   </properties>
 
   <scm>
-    <connection>scm:git:git://github.com/fcrepo4-exts/${project.artifactId}.git
+    <connection>scm:git:git://github.com/fcrepo-exts/${project.artifactId}.git
     </connection>
-    <developerConnection>scm:git:git@github.com:fcrepo4-exts/${project.artifactId}.git
+    <developerConnection>scm:git:git@github.com:fcrepo-exts/${project.artifactId}.git
     </developerConnection>
-    <url>https://github.com/fcrepo4-exts/fcrepo-audit</url>
+    <url>https://github.com/fcrepo-exts/fcrepo-audit</url>
     <tag>HEAD</tag>
   </scm>
 
